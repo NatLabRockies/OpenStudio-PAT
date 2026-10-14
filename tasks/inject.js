@@ -7,6 +7,7 @@ var utils = require('./utils');
 
 var $ = require('gulp-load-plugins')();
 var rename = require('gulp-rename');
+var templateCache = require('./templateCache');
 
 var _ = require('lodash');
 
@@ -55,7 +56,7 @@ function partials() {
       removeRedundantAttributes: true,
       removeTagWhitespace: true
     }))
-    .pipe($.angularTemplatecache('templateCacheHtml.js', {
+    .pipe(templateCache('templateCacheHtml.js', {
       module: 'PAT',
       root: 'app'
     }))

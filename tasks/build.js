@@ -2,9 +2,9 @@
 
 var path = require('path');
 var gulp = require('gulp');
-var request = require('request');
-var progress = require('request-progress');
-var source = require('vinyl-source-stream');
+var fs = require('fs');
+var { Readable, Transform } = require('stream');
+var { pipeline } = require('stream/promises');
 var jetpack = require('fs-jetpack');
 var conf = require('./conf');
 var utils = require('./utils');
@@ -189,23 +189,60 @@ function downloadDeps() {
       var destName = fileName;
     }
 
-    return progress(request({uri: uri, timeout: 5000}))
-      .on('progress', state => {
-        console.log(`Downloading ${depend}, ${(state.percent * 100).toFixed(0)}%`);
-      })
-      .pipe(source(destName))
-      .pipe(gulp.dest(destination));
+    return downloadFile(depend, uri, path.join(destination, destName));
   });
 
-  return merge(tasks);
+  return Promise.all(tasks);
 }
 
-const { pipeline } = require('stream');
-const { promisify } = require('util');
-const pipelineAsync = promisify(pipeline);
+// Fails if no response headers or no data arrives within TIMEOUT_MS
+const TIMEOUT_MS = 5000;
+
+async function downloadFile(depend, uri, destPath) {
+  const controller = new AbortController();
+  let timer;
+  const resetTimer = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => controller.abort(new Error(`Timed out after ${TIMEOUT_MS}ms downloading ${uri}`)), TIMEOUT_MS);
+  };
+
+  try {
+    resetTimer();
+    const response = await fetch(uri, {signal: controller.signal});
+    if (!response.ok) {
+      throw new Error(`Download of ${uri} failed: HTTP ${response.status} ${response.statusText}`);
+    }
+
+    const total = Number(response.headers.get('content-length')) || 0;
+    let received = 0;
+    let lastPercent = -1;
+    const counter = new Transform({
+      transform(chunk, encoding, callback) {
+        resetTimer();
+        received += chunk.length;
+        if (total) {
+          const percent = Math.floor(received / total * 100);
+          if (percent !== lastPercent) {
+            lastPercent = percent;
+            console.log(`Downloading ${depend}, ${percent}%`);
+          }
+        }
+        callback(null, chunk);
+      }
+    });
+
+    fs.mkdirSync(path.dirname(destPath), {recursive: true});
+    await pipeline(Readable.fromWeb(response.body), counter, fs.createWriteStream(destPath), {signal: controller.signal});
+  } catch (err) {
+    fs.rmSync(destPath, {force: true});
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function extractTarball(file, dir, options) {
-  return pipelineAsync(
+  return pipeline(
     jetpack.createReadStream(file),
     zlib.createGunzip(),
     tar.extract(dir, options)
