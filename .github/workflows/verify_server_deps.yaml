@@ -50,8 +50,8 @@ jobs:
       fail-fast: false
       matrix:
         # Nested tarball handling only affects darwin/linux, so Windows is added on workflow_dispatch only.
-        # macos-13 is retired by GitHub; macos-15-intel is the Intel runner used by build_pat.yaml.
-        include: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[{"name":"Windows","os":"windows-latest"},{"name":"Ubuntu","os":"ubuntu-latest"},{"name":"macOS Intel","os":"macos-15-intel"},{"name":"macOS arm64","os":"macos-14"}]' || '[{"name":"Ubuntu","os":"ubuntu-latest"},{"name":"macOS Intel","os":"macos-15-intel"},{"name":"macOS arm64","os":"macos-14"}]') }}
+        # macos-13 is retired by GitHub; macos-15-intel is the Intel runner used by build_pat.yaml. macos-14 is retired too; macos-15 is arm64.
+        include: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[{"name":"Windows","os":"windows-latest"},{"name":"Ubuntu","os":"ubuntu-latest"},{"name":"macOS Intel","os":"macos-15-intel"},{"name":"macOS arm64","os":"macos-15"}]' || '[{"name":"Ubuntu","os":"ubuntu-latest"},{"name":"macOS Intel","os":"macos-15-intel"},{"name":"macOS arm64","os":"macos-15"}]') }}
     steps:
       - uses: actions/checkout@v4
 
@@ -99,7 +99,8 @@ jobs:
             fail=1
           fi
 
-          left=$(find "$d/OpenStudio-server" -name '*.tar.gz' 2>/dev/null || true)
+          # R source packages under docker/R/lib/R-packages ship as .tar.gz on purpose
+          left=$(find "$d/OpenStudio-server" -name '*.tar.gz' -not -path '*/docker/R/lib/R-packages/*' 2>/dev/null || true)
           if [ -n "$left" ]; then
             echo "::error::leftover tarballs in OpenStudio-server:"; echo "$left"; fail=1
           fi
@@ -169,6 +170,6 @@ jobs:
             echo "bundle=$bundle"
             # Caveat: if the bundle sits in an extensions dir without psych.rb, the ruby stdlib psych.rb
             # is used and loads whichever psych.bundle comes first on the load path; -I forces ours first.
-            $RUN "$RUBY" -I "$libdir" -I "$gemlib" -e 'require "psych"; puts Psych::LIBYAML_VERSION; puts YAML.load("a: 1").inspect; expected = File.expand_path(ARGV.fetch(0)); abort "expected #{expected} in $LOADED_FEATURES" unless $LOADED_FEATURES.any? { |feature| File.expand_path(feature) == expected }; puts expected' "$bundle"
+            $RUN "$RUBY" -I "$libdir" -I "$gemlib" -e 'require "psych"; puts Psych::LIBYAML_VERSION; puts Psych.load("a: 1").inspect; expected = File.expand_path(ARGV.fetch(0)); abort "expected #{expected} in $LOADED_FEATURES" unless $LOADED_FEATURES.any? { |feature| File.expand_path(feature) == expected }; puts expected' "$bundle"
           done < <(find "$PWD/$DEPS_DIR/OpenStudio-server" -name psych.bundle)
 
