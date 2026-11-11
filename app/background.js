@@ -39,12 +39,20 @@ remoteMain.initialize();
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
+// Set by the Playwright launcher so test runs never steal focus from the developer's desktop.
+const isHeadlessTest = process.env.HEADLESS_TEST === '1';
+
 app.on('ready', () => {
+  if (isHeadlessTest && process.platform === 'darwin') {
+    app.dock.hide();
+  }
 
   const mainWindow = createWindow('main', {
     width: 1000,
     height: 600,
+    show: !isHeadlessTest,
     webPreferences: {
+      backgroundThrottling: !isHeadlessTest, // hidden windows otherwise throttle timers/animations
       nodeIntegration: true,
       contextIsolation: false,
       webviewTag: true,
