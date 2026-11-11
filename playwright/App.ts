@@ -1,5 +1,5 @@
 import { ElectronApplication, Page, _electron as electron } from '@playwright/test';
-import { MAIN_SCRIPT_PATH } from './constants';
+import { MAIN_SCRIPT_PATH, MenuStructureItem } from './constants';
 
 export class App {
   static instance: ElectronApplication;
@@ -72,6 +72,21 @@ export class App {
       },
       { menuItem }
     );
+  }
+
+  static async getMenuStructure(): Promise<{ name: string; items: MenuStructureItem[] }> {
+    return App.instance.evaluate(({ app }) => {
+      const plain = (i: any): any => {
+        const item: any = {};
+        for (const key of ['label', 'id', 'role', 'type', 'accelerator']) {
+          if (i[key]) item[key] = i[key];
+        }
+        if (i.type === 'radio') item.checked = i.checked;
+        if (i.submenu) item.submenu = i.submenu.items.map(plain);
+        return item;
+      };
+      return { name: app.name, items: app.applicationMenu!.items.map(plain) };
+    });
   }
 
   static async clickMenuItem(menuItems: string[]) {
