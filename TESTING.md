@@ -92,6 +92,14 @@ You can run each of these scripts on an as-needed basis to speed up development 
   npm run test:parallel -- run-page
   ```
 
+### Hidden test windows
+
+Tests launch PAT with `HEADLESS_TEST=1`, which keeps the window hidden (and, on macOS, the Dock icon) so test runs don't steal focus. To watch a run, set `HEADLESS_TEST=0`:
+
+```
+HEADLESS_TEST=0 npm run test:parallel -- nav
+```
+
 ### Potential false negative Parallel tests
 
 When running locally, a small number of Parallel tests may randomly fail when they actually should pass. If false negatives occur, they should only occur infrequently. The tests should pass if you simply re-run them.
