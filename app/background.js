@@ -58,6 +58,33 @@ app.on('ready', () => {
   });
   remoteMain.enable(mainWindow.webContents);
 
+  // CI smoke test: PAT_SMOKE_TEST=1 exits 0 once the AngularJS app has bootstrapped, 1 on load failure/crash/timeout.
+  // Combine with HEADLESS_TEST=1 to run it locally without a visible window.
+  if (process.env.PAT_SMOKE_TEST === '1') {
+    const fail = reason => {
+      console.error('PAT smoke test FAILED: ' + reason);
+      app.exit(1);
+    };
+    const wc = mainWindow.webContents;
+    wc.on('did-fail-load', (event, code, description) => fail('did-fail-load ' + code + ' ' + description));
+    wc.on('render-process-gone', (event, details) => fail('render-process-gone ' + details.reason));
+    wc.on('did-finish-load', () => {
+      setTimeout(() => {
+        wc.executeJavaScript('typeof angular !== "undefined" && !!angular.element(document.body).injector()')
+          .then(ok => {
+            if (ok) {
+              console.log('PAT smoke test passed');
+              app.exit(0);
+            } else {
+              fail('AngularJS app did not bootstrap');
+            }
+          })
+          .catch(err => fail(err.message));
+      }, 5000);
+    });
+    setTimeout(() => fail('timeout'), 90000);
+  }
+
   const env = getEnv(app.getAppPath());
   if (env.name === 'development') {
     mainWindow.loadURL('http://localhost:3000/index.html');
