@@ -29,7 +29,7 @@
     "jquery": "~3.6.1",
     "js2xmlparser": "~5.0.0",
     "jszip": "~3.10.1",
-    "lodash": "~4.17.21",
+    "lodash": "~4.18.1",
     "ngprogress": "~1.1.3",
     "portfinder": "~1.0.32",
     "ui-grid-draggable-rows": "~0.3.3",
