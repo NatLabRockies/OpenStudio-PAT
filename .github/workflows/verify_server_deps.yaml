@@ -151,16 +151,15 @@ jobs:
         if: ${{ !cancelled() && runner.os == 'macOS' }}
         run: |
           set -eu
-          # The bundled ruby and server gems are x86_64-only; arm64 runners need Rosetta.
+          RUBY="$PWD/$DEPS_DIR/ruby/bin/ruby"
           RUN=""
-          if [ "$(uname -m)" = "arm64" ]; then
+          if [ "$(uname -m)" = "arm64" ] && ! lipo -archs "$RUBY" | grep -qw arm64; then
             softwareupdate --install-rosetta --agree-to-license || true
             if ! arch -x86_64 /usr/bin/true 2>/dev/null; then
               echo "::error::Rosetta unavailable; cannot execute x86_64 bundled ruby"; exit 1
             fi
             RUN="arch -x86_64"
           fi
-          RUBY="$PWD/$DEPS_DIR/ruby/bin/ruby"
           $RUN "$RUBY" -v
           while IFS= read -r bundle; do
             libdir=$(dirname "$bundle")

@@ -110,7 +110,25 @@ set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Parametric Analysis Tool")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://www.openstudio.net")
-set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}")
+# Handle architecture-specific package naming
+if(CMAKE_OSX_ARCHITECTURES)
+  # Check if CMAKE_OSX_ARCHITECTURES contains multiple architectures (semicolon-separated)
+  string(FIND "${CMAKE_OSX_ARCHITECTURES}" ";" MULTI_ARCH_POS)
+  if(MULTI_ARCH_POS GREATER -1)
+    # Multiple architectures detected - use "universal" suffix
+    set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-universal")
+  elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
+    set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-arm64")
+  elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
+    set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-x86_64")
+  else()
+    # Single architecture but not arm64/x86_64 - use the architecture name
+    set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_OSX_ARCHITECTURES}")
+  endif()
+else()
+  # No architecture specified - use default naming
+  set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}")
+endif()
 set(CPACK_PACKAGE_CONTACT "openstudio@nrel.gov")
 
 include(CPack)

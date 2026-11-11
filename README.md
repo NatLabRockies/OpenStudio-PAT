@@ -86,9 +86,14 @@ We tested our Linux-specific instructions on Ubuntu 22.04, but they should also 
 		```
 	* Run the appropriate command to generate the files.
 		* MacOS:
-			```
-			cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=11 -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_BUILD_TYPE=Release ../
-			```
+			* For ARM64 (Apple Silicon) builds:
+				```
+				cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=12.1 -DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_BUILD_TYPE=Release ../
+				```
+			* For Intel (x86_64) builds:
+				```
+				cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=12.1 -DCMAKE_OSX_ARCHITECTURES="x86_64" -DCMAKE_BUILD_TYPE=Release ../
+				```
 		* Windows:
 			```
 			cmake -G "Visual Studio 17 2022" -A x64 ../
@@ -120,6 +125,7 @@ We tested our Linux-specific instructions on Ubuntu 22.04, but they should also 
 		```
 
 6. The installer package should now be ready to use.
-	* MacOS: `./build/ParametricAnalysisTool-x.x.x-Darwin.dmg`
+	* MacOS ARM64: `./build/ParametricAnalysisTool-x.x.x-Darwin-arm64.dmg`
+	* MacOS Intel: `./build/ParametricAnalysisTool-x.x.x-Darwin-x86_64.dmg`
 	* Windows: `./build/ParametricAnalysisTool-x.x.x-Windows.exe`
 	* Linux: `./build/ParametricAnalysisTool-x.x.x-Linux.deb`

@@ -165,7 +165,18 @@ if (argv.exclude) {
 const manifest = jetpack.read('manifest.json', 'json');
 
 const platform = os.platform();
-const arch = os.arch();
+// Support architecture override from GitHub Actions matrix or CMake
+const cmakeArch = process.env.CMAKE_OSX_ARCHITECTURES ? process.env.CMAKE_OSX_ARCHITECTURES.split(';')[0] : null;
+const arch = process.env.MATRIX_ARCH || cmakeArch || os.arch();
+
+function getActualFileInfo(manifest, depend, platform, arch) {
+  let fileInfo = _.find(manifest[depend], {platform: platform, arch: arch});
+  if (!fileInfo && arch !== 'x64') {
+    console.log(`Warning: Could not find ${depend} for ${platform}-${arch}, falling back to x64`);
+    fileInfo = _.find(manifest[depend], {platform: platform, arch: 'x64'});
+  }
+  return fileInfo;
+}
 
 function downloadDeps() {
 
@@ -174,7 +185,7 @@ function downloadDeps() {
 
   console.log('Dependencies: ' + dependencies.sort().join(', '));
   var tasks = dependencies.map(depend => {
-    const fileInfo = _.find(manifest[depend], {platform: platform});
+    const fileInfo = getActualFileInfo(manifest, depend, platform, arch);
     const fileName = fileInfo.name;
 
     // Note JM 2018-09-13: Allow other resources in case AWS isn't up to date
@@ -189,7 +200,7 @@ function downloadDeps() {
       var destName = fileName;
     }
 
-    return progress(request({uri: uri, timeout: 5000}))
+    return progress(request({uri: uri, timeout: 30000}))
       .on('progress', state => {
         console.log(`Downloading ${depend}, ${(state.percent * 100).toFixed(0)}%`);
       })
@@ -256,7 +267,7 @@ async function unwrapNestedServerTarball(dir) {
 
 function extractDeps() {
   var tasks = dependencies.map(async depend => {
-    const fileInfo = _.find(manifest[depend], {platform: platform});
+    const fileInfo = getActualFileInfo(manifest, depend, platform, arch);
     const fileName = fileInfo.name;
 
     if( fileName.includes("http") ) {
@@ -288,7 +299,7 @@ function extractDeps() {
 
 function cleanDeps() {
   var tasks = dependencies.map(depend => {
-    const fileInfo = _.find(manifest[depend], {platform: platform});
+    const fileInfo = getActualFileInfo(manifest, depend, platform, arch);
     const fileName = fileInfo.name;
 
     if( fileName.includes("http") ) {
@@ -297,7 +308,7 @@ function cleanDeps() {
       var destName = fileName;
     }
 
-    return gulp.src(path.join(destination, fileName), {read: false})
+    return gulp.src(path.join(destination, destName), {read: false, allowEmpty: true})
       .pipe(gulpClean());
   });
 

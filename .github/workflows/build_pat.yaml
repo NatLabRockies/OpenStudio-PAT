@@ -32,16 +32,25 @@ jobs:
       # fail-fast: Default is true, switch to false to allow one platform to fail and still run others
       fail-fast: false
       matrix:
-        name: [Ubuntu, macOS, Windows_2022]
+        name: [Ubuntu, macOS-Intel, macOS-ARM, Windows_2022]
         include:
         - name: Ubuntu
           os: ubuntu-24.04
           node-version: 18
           allow_failure: false
-        - name: macOS
+        - name: macOS-Intel
           os: macos-15-intel
           node-version: 18
           allow_failure: false
+          arch: x86_64
+          MACOSX_DEPLOYMENT_TARGET: "12.1"
+          SDKROOT: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+        - name: macOS-ARM
+          os: macos-15
+          node-version: 18
+          allow_failure: false
+          arch: arm64
           MACOSX_DEPLOYMENT_TARGET: "12.1"
           SDKROOT: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
           DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
@@ -138,11 +147,14 @@ jobs:
     - name: Configure CMake & build (macOS)
       working-directory: ./build
       if: runner.os == 'macOS'
+      env:
+        MATRIX_ARCH: ${{ matrix.arch == 'x86_64' && 'x64' || matrix.arch }}
+        CMAKE_OSX_ARCHITECTURES: ${{ matrix.arch }}
       shell: bash
       run: |
         set -x
-        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=11 \
-              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ matrix.MACOSX_DEPLOYMENT_TARGET }} \
+              -DCMAKE_OSX_ARCHITECTURES="${{ matrix.arch }}" \
               -DCMAKE_BUILD_TYPE=Release \
               ../
         cmake --build . --target "$BUILD_TARGET" -j $N
