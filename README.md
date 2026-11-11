@@ -87,7 +87,7 @@ We tested our Linux-specific instructions on Ubuntu 22.04, but they should also 
 	* Run the appropriate command to generate the files.
 		* MacOS:
 			```
-			cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=11 -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_BUILD_TYPE=Release ../
+			cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_BUILD_TYPE=Release ../
 			```
 		* Windows:
 			```
