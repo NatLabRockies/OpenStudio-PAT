@@ -7,7 +7,7 @@
   "author": "National Renewable Energy Laboratory",
   "main": "background.js",
   "dependencies": {
-    "@electron/remote": "~2.0.8",
+    "@electron/remote": "~2.1.4",
     "adm-zip": "~0.6.1",
     "angular": "~1.8.3",
     "angular-animate": "~1.8.3",
