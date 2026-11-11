@@ -15,7 +15,8 @@ on:
 
 # Cancel superseded PR runs; never cancel develop/tag runs that publish installers
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -68,8 +69,8 @@ jobs:
       run: |
         set -x
         if [ "$RUNNER_OS" == "Linux" ]; then
-          sudo apt update
-          sudo apt install cmake
+          # CMake ships on the runner image (/usr/local/bin); skipping apt avoids mirror outages (#362)
+          cmake --version
         elif [ "$RUNNER_OS" == "macOS" ]; then
           if [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then
             curl -L -O https://download.qt.io/archive/qt-installer-framework/4.3.0/QtInstallerFramework-macOS-x64-4.3.0.dmg
