@@ -42,7 +42,7 @@ jobs:
           os: macos-15-intel
           node-version: 24
           allow_failure: false
-          MACOSX_DEPLOYMENT_TARGET: "12.1"
+          MACOSX_DEPLOYMENT_TARGET: "13.0"
           SDKROOT: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
           DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
         - name: Windows_2022
@@ -141,7 +141,7 @@ jobs:
       shell: bash
       run: |
         set -x
-        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=11 \
+        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
               -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
               -DCMAKE_BUILD_TYPE=Release \
               ../

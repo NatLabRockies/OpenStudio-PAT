@@ -12,7 +12,7 @@
     "browser-sync": "~2.27.10",
     "browser-sync-spa": "~1.0.3",
     "chalk": "~5.0.1",
-    "electron": "~21.0.1",
+    "electron": "~45.3.0",
     "eslint-plugin-angular": "~4.1.0",
     "eslint-plugin-lodash": "~7.4.0",
     "fancy-log": "~2.0.0",
@@ -61,10 +61,10 @@
     "rcedit": "~0.4.0"
   },
   "engines": {
-    "node": "^22.12 || ^24"
+    "node": ">=22.12"
   },
   "scripts": {
-    "postinstall": "cd app && npm install",
+    "postinstall": "install-electron && cd app && npm install",
     "build": "npx gulp build",
     "release": "npx gulp release --env=production",
     "start": "node ./tasks/start",
@@ -77,6 +77,6 @@
     "test": "npm run test:setup && npm run test:parallel && npm run test:serial"
   },
   "browserslist": [
-    "electron >= 20"
+    "electron >= 45"
   ]
 }
