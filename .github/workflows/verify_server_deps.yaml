@@ -72,11 +72,10 @@ jobs:
           done
           echo "libyaml absent from Homebrew prefixes"
 
-      # gulp installDeps only needs root devDependencies; skip the electron binary download and
-      # the root postinstall (`cd app && npm install`) via --ignore-scripts.
+      # gulp installDeps only needs root devDependencies; skip the root postinstall
+      # (`install-electron && cd app && npm install`) via --ignore-scripts.
       - name: npm ci
         env:
-          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
         run: npm ci --ignore-scripts
 

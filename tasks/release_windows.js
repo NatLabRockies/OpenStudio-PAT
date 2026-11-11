@@ -56,6 +56,8 @@ var finalize = function () {
   }, function (err) {
     if (!err) {
       deferred.resolve();
+    } else {
+      deferred.reject(err);
     }
   });
 

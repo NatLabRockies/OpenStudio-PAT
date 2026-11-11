@@ -66,7 +66,10 @@ app.on('ready', () => {
       app.exit(1);
     };
     const wc = mainWindow.webContents;
-    wc.on('did-fail-load', (event, code, description) => fail('did-fail-load ' + code + ' ' + description));
+    // Only main-frame failures count; -3 is ERR_ABORTED (cancelled or redirected navigation)
+    wc.on('did-fail-load', (event, code, description, url, isMainFrame) => {
+      if (isMainFrame && code !== -3) fail('did-fail-load ' + code + ' ' + description);
+    });
     wc.on('render-process-gone', (event, details) => fail('render-process-gone ' + details.reason));
     wc.on('did-finish-load', () => {
       setTimeout(() => {
