@@ -68,8 +68,8 @@ jobs:
       run: |
         set -x
         if [ "$RUNNER_OS" == "Linux" ]; then
-          sudo apt update
-          sudo apt install cmake
+          # CMake ships on the runner image (/usr/local/bin); skipping apt avoids mirror outages (#362)
+          cmake --version
         elif [ "$RUNNER_OS" == "macOS" ]; then
           if [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then
             curl -L -O https://download.qt.io/archive/qt-installer-framework/4.3.0/QtInstallerFramework-macOS-x64-4.3.0.dmg
