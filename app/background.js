@@ -31,7 +31,9 @@
 // window from here.
 
 import { app } from 'electron';
+import path from 'path';
 import createWindow from './electron/window';
+import registerIpc from './electron/ipc';
 import { getEnv } from './env';
 
 const remoteMain = require('@electron/remote/main');
@@ -52,6 +54,7 @@ app.on('ready', () => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      preload: path.join(__dirname, 'main_preload.js'),
       webviewTag: true,
       webSecurity: false // Disable the same-origin policy when using http
     }
@@ -89,6 +92,7 @@ app.on('ready', () => {
   }
 
   const env = getEnv(app.getAppPath());
+  registerIpc(mainWindow, env);
   if (env.name === 'development') {
     mainWindow.loadURL('http://localhost:3000/index.html');
     mainWindow.openDevTools();
