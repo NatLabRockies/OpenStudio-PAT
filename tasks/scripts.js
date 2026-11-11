@@ -38,7 +38,7 @@ var bundle = function (src, dest) {
 
   return rollup.rollup({
     input: src,
-    external: ['adm-zip', 'electron', '@electron/remote', 'fs', 'fs-jetpack', 'http', 'https', 'jszip', 'os', 'path', 'remote', 'url', 'xml2js', 'archiver', 'portfinder', 'version_compare', 'yamljs'],
+    external: ['adm-zip', 'electron', 'fs', 'fs-jetpack', 'http', 'https', 'jszip', 'os', 'path', 'url', 'xml2js', 'archiver', 'portfinder', 'version_compare', 'yamljs'],
     plugins: [
       babel({
         babelHelpers: 'bundled',

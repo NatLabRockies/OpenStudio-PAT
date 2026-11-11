@@ -37,9 +37,6 @@ import registerIpc from './electron/ipc';
 import { setApplicationMenu, setContextMenu } from './electron/menu';
 import { getEnv } from './env';
 
-const remoteMain = require('@electron/remote/main');
-remoteMain.initialize();
-
 // HEADLESS_TEST=1: keep the window hidden and off the macOS dock so local test runs don't steal focus
 const headless = process.env.HEADLESS_TEST === '1';
 if (headless && app.dock) app.dock.hide();
@@ -60,7 +57,6 @@ app.on('ready', () => {
       webSecurity: false // Disable the same-origin policy when using http
     }
   });
-  remoteMain.enable(mainWindow.webContents);
 
   // CI smoke test: PAT_SMOKE_TEST=1 exits 0 once the AngularJS app has bootstrapped, 1 on load failure/crash/timeout.
   // Combine with HEADLESS_TEST=1 to run it locally without a visible window.

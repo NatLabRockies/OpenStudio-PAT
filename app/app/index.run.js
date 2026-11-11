@@ -27,8 +27,6 @@
  **********************************************************************************************************************/
 /*global bootlint*/
 
-import { app, getGlobal } from '@electron/remote';
-
 export function runBlock($rootScope, $state, $window, $document, $translate, toastr, MeasureManager, DependencyManager, Project, BCL, OsServer, SetProject, OpenProject, $log, Message, RemoteHelper) {
   'ngInject';
 
@@ -36,8 +34,8 @@ export function runBlock($rootScope, $state, $window, $document, $translate, toa
   let exitReady = false;
 
   $window.onbeforeunload = e => {
-    console.log('EXIT BUTTON CLICKED?: ', getGlobal('exitClicked'));
-    if (!exitReady && getGlobal('exitClicked')) {
+    console.log('EXIT BUTTON CLICKED?: ', window.patBridge.exitClicked());
+    if (!exitReady && window.patBridge.exitClicked()) {
       try {
         // only if project is set
         if (Project.getProjectDir() != null) {
@@ -56,10 +54,10 @@ export function runBlock($rootScope, $state, $window, $document, $translate, toa
                 //  server is stopped
                 //jetpack.write(Project.getProjectDir().path('serverStopTest.json'), {message: 'Server stopped.'});
                 exitReady = true;
-                app.quit();
+                window.patBridge.quit();
               }, () => {
                 exitReady = true;
-                app.quit();
+                window.patBridge.quit();
               });
             }, () => {
               // stop error
@@ -68,10 +66,10 @@ export function runBlock($rootScope, $state, $window, $document, $translate, toa
                 //  server is stopped
                 //jetpack.write(Project.getProjectDir().path('serverStopTest.json'), {message: 'Server stopped.'});
                 exitReady = true;
-                app.quit();
+                window.patBridge.quit();
               }, () => {
                 exitReady = true;
-                app.quit();
+                window.patBridge.quit();
               });
             });
           }, () => {
@@ -84,10 +82,10 @@ export function runBlock($rootScope, $state, $window, $document, $translate, toa
               OsServer.stopServer('local').then(() => {
                 //  server is stopped
                 exitReady = true;
-                app.quit();
+                window.patBridge.quit();
               }, () => {
                 exitReady = true;
-                app.quit();
+                window.patBridge.quit();
               });
             }, () => {
               // cloud stop error
@@ -96,17 +94,17 @@ export function runBlock($rootScope, $state, $window, $document, $translate, toa
               OsServer.stopServer('local').then(() => {
                 //  server is stopped
                 exitReady = true;
-                app.quit();
+                window.patBridge.quit();
               }, () => {
                 exitReady = true;
-                app.quit();
+                window.patBridge.quit();
               });
             });
           });
         } else {
           // nothing to do, exit.
           exitReady = true;
-          app.quit();
+          window.patBridge.quit();
         }
       } catch (e) {
         // TODO: log something to a file
@@ -114,7 +112,7 @@ export function runBlock($rootScope, $state, $window, $document, $translate, toa
         //   //jetpack.write(Project.getProjectDir().path('serverStopTest.json'), {message: 'There was an error closing the app.'});
         // }
         exitReady = true;
-        app.quit();
+        window.patBridge.quit();
       }
     }
 
