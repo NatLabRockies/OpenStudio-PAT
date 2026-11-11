@@ -21,7 +21,7 @@ PAT includes two different sets of tests, **Parallel** and **Serial**, which hav
 | Tests are run...                         |                 Independently                  |                         Sequentially                         |
 | Using...                                 |        Fresh app instance for each test        |                     Single app instance                      |
 | If one test fails...                     |             No others are affected             |                    Remaining are skipped                     |
-| # of tests in PAT<br/>at time of writing |                      188                       |                              22                              |
+| # of tests in PAT<br/>at time of writing |                      189                       |                              22                              |
 | Test files location                      |    [`playwright/tests/`](playwright/tests/)    |    [`playwright/tests/serial/`](playwright/tests/serial/)    |
 | Configuration file                       | [`playwright.config.ts`](playwright.config.ts) | [`playwright-serial.config.ts`](playwright-serial.config.ts) |
 
@@ -71,6 +71,12 @@ To specify number of workers (default is 4) and retries to handle the parallel t
 
 ```
 npm run test:parallel -- --workers=2 --retries=2
+```
+
+To keep the app window hidden and off the macOS dock while tests run locally (so they don't steal focus), set `HEADLESS_TEST=1`:
+
+```
+HEADLESS_TEST=1 npm run test
 ```
 
 The `test` script runs the following commands in order:

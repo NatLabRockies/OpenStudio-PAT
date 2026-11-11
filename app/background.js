@@ -37,6 +37,10 @@ import { getEnv } from './env';
 const remoteMain = require('@electron/remote/main');
 remoteMain.initialize();
 
+// HEADLESS_TEST=1: keep the window hidden and off the macOS dock so local test runs don't steal focus
+const headless = process.env.HEADLESS_TEST === '1';
+if (headless && app.dock) app.dock.hide();
+
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 app.on('ready', () => {
@@ -44,6 +48,7 @@ app.on('ready', () => {
   const mainWindow = createWindow('main', {
     width: 1000,
     height: 600,
+    ...(headless && { show: false }),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
