@@ -52,8 +52,10 @@ test('window.patBridge exposes exactly the expected members', async () => {
     appPath: 'string',
     dialog: { showMessageBox: 'function', showOpenDialog: 'function' },
     exitClicked: 'function',
+    onMenuClick: 'function',
     paths: { appData: 'string', exe: 'string', temp: 'string', userData: 'string' },
     quit: 'function',
+    setMenuLanguage: 'function',
     shell: { openExternal: 'function', openPath: 'function' }
   });
 });

@@ -27,7 +27,7 @@
  **********************************************************************************************************************/
 /*global bootlint*/
 
-import { app, getGlobal, Menu } from '@electron/remote';
+import { app, getGlobal } from '@electron/remote';
 
 export function runBlock($rootScope, $state, $window, $document, $translate, toastr, MeasureManager, DependencyManager, Project, BCL, OsServer, SetProject, OpenProject, $log, Message, RemoteHelper) {
   'ngInject';
@@ -156,221 +156,32 @@ export function runBlock($rootScope, $state, $window, $document, $translate, toa
     $state.transitionTo('analysis', {}, {reload: true});
   });
 
-  const initialLanguage = $translate.use();
   const setLanguage = language => {
     console.log(language);
     $translate.use(language);
   };
 
-  const fileMenu = {
-    label: 'File',
-    submenu: [{
-      label: 'New',
-      accelerator: 'Ctrl+N',
-      click: () => SetProject.warnCloudRunning('new')
-    }, {
-      label: 'Open',
-      accelerator: 'Ctrl+O',
-      click: () => SetProject.warnCloudRunning('open')
-    }, {
-      label: 'Save',
-      accelerator: 'Ctrl+S',
-      click: () => SetProject.saveProject()
-    }, {
-      label: 'Save As',
-      click: () => SetProject.saveAsProject()
-    }, {
-      label: 'Quit',
-      accelerator: 'Ctrl+Q',
-      click: () => app.quit()
-    }]
+  // The application menu is built in the main process (app/electron/menu.js), which sends the id of a clicked item
+  const menuHandlers = {
+    New: () => SetProject.warnCloudRunning('new'),
+    Open: () => SetProject.warnCloudRunning('open'),
+    Save: () => SetProject.saveProject(),
+    'Save As': () => SetProject.saveAsProject(),
+    English: () => setLanguage('en'),
+    French: () => setLanguage('fr'),
+    'Toggle Debug Messages': () => Message.setShowDebug(!Message.showDebug()),
+    'Open BCL': () => {
+      BCL.openBCLModal().then(() => {
+        // Do something
+      });
+    },
+    'Set MyMeasures Directory': () => Project.openSetMyMeasuresDirModal(),
+    'Server Tools': () => OsServer.openServerToolsModal(),
+    'Learn More': () => shell.openExternal('https://www.openstudio.net/'),
+    'Search Issues': () => shell.openExternal('https://github.com/NREL/OpenStudio-PAT/issues')
   };
-  const template = [{
-    label: 'Edit',
-    submenu: [{
-      label: 'Cut',
-      accelerator: 'CmdOrCtrl+X',
-      role: 'cut'
-    }, {
-      label: 'Copy',
-      accelerator: 'CmdOrCtrl+C',
-      role: 'copy'
-    }, {
-      label: 'Paste',
-      accelerator: 'CmdOrCtrl+V',
-      role: 'paste'
-    }, {
-      label: 'Select All',
-      accelerator: 'CmdOrCtrl+A',
-      role: 'selectall'
-    }]
-  }, {
-    label: 'View',
-    submenu: [{
-      label: 'Language',
-      submenu: [{
-        label: 'English',
-        type: 'radio',
-        checked: initialLanguage == 'en',
-        click() {
-          setLanguage('en');
-        }
-      }, {
-        label: 'French',
-        type: 'radio',
-        checked: initialLanguage == 'fr',
-        click() {
-          setLanguage('fr');
-        }
-      }]
-    }, {
-      label: 'Toggle Full Screen',
-      accelerator: process.platform === 'darwin' ? 'Ctrl+Command+F' : 'F11',
-      click(item, focusedWindow) {
-        if (focusedWindow) focusedWindow.setFullScreen(!focusedWindow.isFullScreen());
-      }
-    }, {
-      label: 'Toggle Developer Tools',
-      accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
-      click(item, focusedWindow) {
-        if (focusedWindow) focusedWindow.webContents.toggleDevTools();
-      }
-    }, {
-      label: 'Toggle Debug Messages',
-      click() {
-        Message.setShowDebug(!Message.showDebug());
-      }
-    }]
-  }, {
-    label: 'Window',
-    role: 'window',
-    submenu: [{
-      label: 'Minimize',
-      accelerator: 'CmdOrCtrl+M',
-      role: 'minimize'
-    }, {
-      label: 'Close',
-      accelerator: 'CmdOrCtrl+W',
-      role: 'close'
-    }, {
-      label: 'Open BCL',
-      click() {
-        BCL.openBCLModal().then(() => {
-          // Do something
-        });
-      }
-    }, {
-      label: 'Set MyMeasures Directory',
-      click: () => Project.openSetMyMeasuresDirModal()
-    }, {
-      label: 'Server Tools',
-      click: () => OsServer.openServerToolsModal()
-    }]
-  }, {
-    label: 'Help',
-    role: 'help',
-    submenu: [{
-      label: 'Learn More',
-      click() {
-        shell.openExternal('https://www.openstudio.net/');
-      }
-    }, {
-      label: 'Search Issues',
-      click() {
-        shell.openExternal('https://github.com/NREL/OpenStudio-PAT/issues');
-      }
-    }]
-  }];
-
-  if (process.platform === 'darwin') {
-    const name = app.name;
-    template.unshift({
-      label: name,
-      submenu: [{
-        label: 'About ' + name,
-        role: 'about'
-      }, {
-        type: 'separator'
-      }, {
-        label: 'Services',
-        role: 'services',
-        submenu: []
-      }, {
-        type: 'separator'
-      }, {
-        label: 'Hide ' + name,
-        accelerator: 'Command+H',
-        role: 'hide'
-      }, {
-        label: 'Hide Others',
-        accelerator: 'Command+Alt+H',
-        role: 'hideothers'
-      }, {
-        label: 'Show All',
-        role: 'unhide'
-      }, {
-        type: 'separator'
-      }, {
-        label: 'Quit',
-        accelerator: 'Command+Q',
-        click() {
-          app.quit();
-        }
-      }]
-    }, {
-      label: 'File',
-      submenu: [{
-        label: 'New',
-        accelerator: 'Command+N',
-        click() {
-          SetProject.warnCloudRunning('new');
-        }
-      }, {
-        label: 'Open',
-        accelerator: 'Command+O',
-        click() {
-          SetProject.warnCloudRunning('open');
-        }
-      }, {
-        label: 'Save',
-        accelerator: 'Command+S',
-        click() {
-          SetProject.saveProject();
-        }
-      }, {
-        label: 'Save As',
-        click() {
-          SetProject.saveAsProject();
-        }
-      }]
-    });
-
-    // Window menu.
-    template[3].submenu.push({
-      type: 'separator'
-    }, {
-      label: 'Bring All to Front',
-      role: 'front'
-    });
-  } else {
-    template.unshift(fileMenu);
-  }
-
-  const addIds = (item) => {
-    if (_.isArray(item)) {
-      return item.map((smItem) => addIds(smItem));
-    }
-
-    const newItem = _.cloneDeep(item);
-    if (item.submenu) {
-      newItem.submenu = addIds(item.submenu);
-    }
-    if (item.label) {
-      newItem.id = item.label;
-    }
-    return newItem;
-  };
-
-  const menu = Menu.buildFromTemplate(addIds(template));
-  Menu.setApplicationMenu(menu);
+  window.patBridge.onMenuClick(id => {
+    if (_.has(menuHandlers, id)) menuHandlers[id]();
+  });
+  window.patBridge.setMenuLanguage($translate.use());
 }

@@ -34,6 +34,7 @@ import { app } from 'electron';
 import path from 'path';
 import createWindow from './electron/window';
 import registerIpc from './electron/ipc';
+import { setApplicationMenu } from './electron/menu';
 import { getEnv } from './env';
 
 const remoteMain = require('@electron/remote/main');
@@ -93,6 +94,7 @@ app.on('ready', () => {
 
   const env = getEnv(app.getAppPath());
   registerIpc(mainWindow, env);
+  setApplicationMenu(mainWindow);
   if (env.name === 'development') {
     mainWindow.loadURL('http://localhost:3000/index.html');
     mainWindow.openDevTools();

@@ -47,5 +47,10 @@ window.patBridge = {
   shell: {
     openExternal: invoke('shell', 'openExternal', true),
     openPath: invoke('shell', 'openPath')
-  }
+  },
+  // handler(id) is called with the id of a clicked application menu item (menu.js)
+  onMenuClick: handler => {
+    ipcRenderer.on('pat:menu', (event, id) => handler(id));
+  },
+  setMenuLanguage: language => ipcRenderer.send('pat:menu:language', language)
 };
