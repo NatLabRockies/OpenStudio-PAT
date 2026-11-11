@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { appHooksSetup } from './shared.spec';
+import { appHooksSetup, describeProjects } from './shared.spec';
 import { App } from '../App';
+import { Projects } from '../constants';
 
 // window.patBridge (app/electron/main_preload.js) and its main-process channels (app/electron/ipc.js).
 // Nothing here opens a native dialog, menu or browser: the Electron functions behind the channels are replaced in
@@ -139,3 +140,26 @@ test.describe('pat:dialog', () => {
     expect(await stubCalls()).toEqual([[options]]);
   });
 });
+
+// window.onbeforeunload in app/app/index.run.js: with a project open the first close is held back while the app
+// cleans up (exitClicked() must be true for that), and the app then quits through quit().
+// The app is gone before the page could be inspected, so the test follows the console messages instead.
+describeProjects(() => {
+  test('closing the window runs the exit flow and then quits the app', async () => {
+    const messages: string[] = [];
+    App.page.on('console', message => messages.push(message.text()));
+    await App.page.evaluate(() => {
+      const bridge = (window as any).patBridge;
+      const quit = bridge.quit;
+      bridge.quit = () => {
+        console.log('patBridge.quit()');
+        quit();
+      };
+    });
+    const closed = App.instance.waitForEvent('close');
+    await App.instance.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].close());
+    await closed;
+    expect(messages).toContain('EXIT BUTTON CLICKED?:  true');
+    expect(messages).toContain('patBridge.quit()');
+  });
+}, [Projects.OFFICE_HVAC]);
