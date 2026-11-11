@@ -78,3 +78,11 @@ test.describe('language radio items follow the renderer', () => {
     await expect.poll(languageChecked).toEqual({ English: true, French: false });
   });
 });
+
+// The context menu itself is native (cut/copy/paste roles in editable fields), so it is not opened here
+test('a context-menu handler is registered on the main window', async () => {
+  const listeners = await App.instance.evaluate(({ BrowserWindow }) =>
+    BrowserWindow.getAllWindows()[0].webContents.listenerCount('context-menu')
+  );
+  expect(listeners).toBe(1);
+});

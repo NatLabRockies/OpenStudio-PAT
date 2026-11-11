@@ -221,3 +221,19 @@ export function setApplicationMenu(mainWindow) {
     menu.getMenuItemById(languageIds[language]).checked = true;
   });
 }
+
+export function setContextMenu(mainWindow, env) {
+  // Roles, not document.execCommand: Electron 33+ disables execCommand('paste') in the renderer
+  const textMenu = Menu.buildFromTemplate([{role: 'cut'}, {role: 'copy'}, {role: 'paste'}]);
+
+  mainWindow.webContents.on('context-menu', (event, params) => {
+    if (env.name == 'development') {
+      mainWindow.webContents.inspectElement(params.x, params.y);
+    }
+
+    // The default context menu (cut, copy, paste) in editable fields (inputs, textareas)
+    if (params.isEditable) {
+      textMenu.popup({window: mainWindow});
+    }
+  });
+}
