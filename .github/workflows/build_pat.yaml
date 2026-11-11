@@ -36,18 +36,18 @@ jobs:
         include:
         - name: Ubuntu
           os: ubuntu-24.04
-          node-version: 18
+          node-version: 24
           allow_failure: false
         - name: macOS
           os: macos-15-intel
-          node-version: 18
+          node-version: 24
           allow_failure: false
           MACOSX_DEPLOYMENT_TARGET: "12.1"
           SDKROOT: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
           DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
         - name: Windows_2022
           os: windows-2022
-          node-version: 18
+          node-version: 24
           allow_failure: false
 
 
