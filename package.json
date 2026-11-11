@@ -61,7 +61,7 @@
     "rcedit": "~0.4.0"
   },
   "engines": {
-    "node": "^18"
+    "node": "^22.12 || ^24"
   },
   "scripts": {
     "postinstall": "cd app && npm install",

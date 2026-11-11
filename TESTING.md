@@ -51,7 +51,7 @@ Here is a list of Playwright-related files & folders:
 - 📁 `reports/playwright/`: HTML report files generated after running tests. The root-level files are for Parallel tests.
   - 📁 `serial/`: Report files for Serial tests
 - 📁 `playwright-results/`: Screenshots & videos taken when running tests (not used at time of writing)
-- 📝 `.github/workflows/playwright.yml`: GitHub Actions template for running tests. At the time of writing, it uses Ubuntu 18.04 and Node 17 for compatibility reasons.
+- 📝 `.github/workflows/playwright.yml`: GitHub Actions template for running tests. It uses Ubuntu 24.04 and Node 24.
 - 📝 `playwright.config.ts`: Configures Parallel tests
 - 📝 `playwright-serial.config.ts`: Configures Serial tests (extends Parallel config)
 
