@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { appHooksSetup, describeProjects } from './shared.spec';
 import { App } from '../App';
-import { Projects } from '../constants';
+import { EXPECTED_DETAILS_BY_PAGE, Page, Projects } from '../constants';
+import { NavPO, ReportsPO } from '../page-objects';
 
 // window.patBridge (app/electron/main_preload.js) and its main-process channels (app/electron/ipc.js).
 // Nothing here opens a native dialog, menu or browser: the Electron functions behind the channels are replaced in
@@ -161,5 +162,34 @@ describeProjects(() => {
     await closed;
     expect(messages).toContain('EXIT BUTTON CLICKED?:  true');
     expect(messages).toContain('patBridge.quit()');
+  });
+}, [Projects.OFFICE_HVAC]);
+
+// The reports webview has nodeintegration, so its page can reach ipcRenderer: it must get neither the bridge
+// nor an answer from its channels (only the main window's webContents is trusted in app/electron/ipc.js)
+describeProjects(() => {
+  test('the reports webview gets neither the bridge nor its channels', async () => {
+    await NavPO.clickIcon(EXPECTED_DETAILS_BY_PAGE[Page.REPORTS].iconAlt);
+    await expect(ReportsPO.webview).toBeVisible();
+    const fromWebview = () =>
+      App.instance.evaluate(({ webContents }) => {
+        const guest = webContents.getAllWebContents().find(wc => wc.getType() === 'webview');
+        if (!guest || guest.isLoading()) return null;
+        return guest.executeJavaScript(`(async () => {
+          const { ipcRenderer } = require('electron');
+          return {
+            bridge: typeof window.patBridge,
+            appInfo: ipcRenderer.sendSync('pat:app-info'),
+            exitClicked: ipcRenderer.sendSync('pat:exit-clicked'),
+            openPath: await ipcRenderer.invoke('pat:shell:openPath', 42).catch(error => error.message)
+          };
+        })()`);
+      });
+    await expect.poll(fromWebview).toEqual({
+      bridge: 'undefined',
+      appInfo: null,
+      exitClicked: false,
+      openPath: expect.stringContaining('untrusted sender')
+    });
   });
 }, [Projects.OFFICE_HVAC]);

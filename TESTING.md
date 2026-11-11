@@ -21,7 +21,7 @@ PAT includes two different sets of tests, **Parallel** and **Serial**, which hav
 | Tests are run...                         |                 Independently                  |                         Sequentially                         |
 | Using...                                 |        Fresh app instance for each test        |                     Single app instance                      |
 | If one test fails...                     |             No others are affected             |                    Remaining are skipped                     |
-| # of tests in PAT<br/>at time of writing |                      212                       |                              22                              |
+| # of tests in PAT<br/>at time of writing |                      213                       |                              22                              |
 | Test files location                      |    [`playwright/tests/`](playwright/tests/)    |    [`playwright/tests/serial/`](playwright/tests/serial/)    |
 | Configuration file                       | [`playwright.config.ts`](playwright.config.ts) | [`playwright-serial.config.ts`](playwright-serial.config.ts) |
 
