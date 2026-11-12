@@ -29,6 +29,11 @@ PAT includes two different sets of tests, **Parallel** and **Serial**, which hav
 
 PAT leverages its set of **Serial tests for when the local server needs to be running** (e.g., running an analysis). This is because it is neither practical nor time efficient to start & stop the local server for each and every one of these tests.
 
+The server-dependent Serial tests run only locally (CI skips them), and they need:
+
+- Port 8080 free. The tests stop immediately if another server is already listening there, such as a second test run.
+- A working local server from `npx gulp installDeps`. If PAT can't start it, the tests fail with "PAT could not start the local server"; the cause is in `.tmp-test/<project>/logs/rails.log`. On Apple Silicon Macs, `develop` currently ships only the Intel server, which fails to load `libyaml`.
+
 <br/>
 
 ## File Structure

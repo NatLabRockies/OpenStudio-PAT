@@ -1,4 +1,4 @@
-import { ElectronApplication, Page, _electron as electron } from '@playwright/test';
+import { ConsoleMessage, ElectronApplication, Page, _electron as electron } from '@playwright/test';
 import { MAIN_SCRIPT_PATH } from './constants';
 
 // Hidden, dockless window for local runs so tests don't steal focus. CI stays visible:
@@ -86,7 +86,39 @@ export class App {
     );
   }
 
+  static async isServerRunning(statusUrl = 'http://localhost:8080/status.json') {
+    return App.page.evaluate(
+      statusUrl =>
+        fetch(statusUrl).then(
+          r => r.ok,
+          () => false
+        ),
+      statusUrl
+    );
+  }
+
+  // Fails as soon as PAT logs that start_local failed, instead of polling until the test timeout.
   static async waitForServerState(shouldBeRunning = true, statusUrl = 'http://localhost:8080/status.json') {
+    if (!shouldBeRunning) {
+      return App.pollServerState(false, statusUrl);
+    }
+    let onConsole: (msg: ConsoleMessage) => void = () => {};
+    const startFailed = new Promise<never>((_, reject) => {
+      onConsole = msg => {
+        if (/Server failed to start|start_local exited/.test(msg.text())) {
+          reject(new Error(`PAT could not start the local server: ${msg.text()}`));
+        }
+      };
+      App.page.on('console', onConsole);
+    });
+    try {
+      await Promise.race([App.pollServerState(true, statusUrl), startFailed]);
+    } finally {
+      App.page.off('console', onConsole);
+    }
+  }
+
+  private static async pollServerState(shouldBeRunning: boolean, statusUrl: string) {
     await App.page.evaluate(
       async ({ shouldBeRunning, statusUrl }) => {
         const hardWait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
