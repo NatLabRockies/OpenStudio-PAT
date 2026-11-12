@@ -94,7 +94,7 @@ You can run each of these scripts on an as-needed basis to speed up development 
 
 ### Hidden test windows
 
-Tests launch PAT with `HEADLESS_TEST=1`, which keeps the window hidden (and, on macOS, the Dock icon) so test runs don't steal focus. To watch a run, set `HEADLESS_TEST=0`:
+Local test runs launch PAT with `HEADLESS_TEST=1`, which keeps the window hidden (and, on macOS, the Dock icon) so test runs don't steal focus. CI (`CI` set) keeps the window visible. To watch a local run, set `HEADLESS_TEST=0`:
 
 ```
 HEADLESS_TEST=0 npm run test:parallel -- nav

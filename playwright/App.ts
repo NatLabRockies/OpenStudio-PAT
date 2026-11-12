@@ -1,6 +1,10 @@
 import { ElectronApplication, Page, _electron as electron } from '@playwright/test';
 import { MAIN_SCRIPT_PATH, MenuStructureItem } from './constants';
 
+// Hidden, dockless window for local runs so tests don't steal focus. CI stays visible:
+// nobody's focus to steal there, and CSS animations stall in hidden windows under xvfb.
+export const HEADLESS_TEST = process.env.HEADLESS_TEST ?? (process.env.CI ? '0' : '1');
+
 export class App {
   static instance: ElectronApplication;
   static page: Page;
@@ -26,8 +30,7 @@ export class App {
       args.unshift('--no-sandbox');
     }
 
-    // Hidden, dockless window by default; HEADLESS_TEST=0 shows it for debugging.
-    const env = { ...process.env, HEADLESS_TEST: process.env.HEADLESS_TEST ?? '1' } as Record<string, string>;
+    const env = { ...process.env, HEADLESS_TEST: HEADLESS_TEST } as Record<string, string>;
     App.instance = await electron.launch({ args, env });
 
     App.page = await App.instance.firstWindow();
