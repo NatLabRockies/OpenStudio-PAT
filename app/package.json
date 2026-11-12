@@ -33,7 +33,7 @@
     "portfinder": "~1.0.32",
     "ui-grid-draggable-rows": "~0.3.3",
     "version_compare": "~0.0.3",
-    "xml2js": "~0.4.23",
+    "xml2js": "~0.6.2",
     "yamljs": "~0.3.0"
   }
 }
