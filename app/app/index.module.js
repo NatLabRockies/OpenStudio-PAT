@@ -25,10 +25,6 @@
  *  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************************************************************/
-// Electron
-import { contextMenu } from '../electron/context_menu';
-contextMenu();
-
 import {config} from './index.config';
 import {routerConfig} from './index.route';
 import {runBlock} from './index.run';

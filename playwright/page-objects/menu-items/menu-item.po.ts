@@ -9,6 +9,20 @@ export class MenuItemPO extends BasePageObject {
     return App.clickMenuItem(this.MENUS);
   }
 
+  // checked state of the item in the main process (radio and checkbox items)
+  static async isChecked(): Promise<boolean> {
+    return App.instance.evaluate(
+      ({ app }, params) => {
+        let menuItem = app.applicationMenu!.getMenuItemById(params.menuItems[0]);
+        for (let i = 1; i < params.menuItems.length; ++i) {
+          menuItem = menuItem!.submenu!.getMenuItemById(params.menuItems[i]);
+        }
+        return menuItem!.checked;
+      },
+      { menuItems: this.MENUS }
+    );
+  }
+
   static async isOk() {
     const menu = await App.getMenuItem(this.MENUS[0]);
     expect(menu).toBeDefined();
