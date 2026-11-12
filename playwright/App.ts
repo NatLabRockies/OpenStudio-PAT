@@ -26,7 +26,9 @@ export class App {
       args.unshift('--no-sandbox');
     }
 
-    App.instance = await electron.launch({ args });
+    // Hidden, dockless window by default; HEADLESS_TEST=0 shows it for debugging.
+    const env = { ...process.env, HEADLESS_TEST: process.env.HEADLESS_TEST ?? '1' } as Record<string, string>;
+    App.instance = await electron.launch({ args, env });
 
     App.page = await App.instance.firstWindow();
   }

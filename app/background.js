@@ -37,19 +37,22 @@ import registerIpc from './electron/ipc';
 import { setApplicationMenu, setContextMenu } from './electron/menu';
 import { getEnv } from './env';
 
-// HEADLESS_TEST=1: keep the window hidden and off the macOS dock so local test runs don't steal focus
-const headless = process.env.HEADLESS_TEST === '1';
-if (headless && app.dock) app.dock.hide();
-
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
+// Set by the Playwright launcher so test runs never steal focus from the developer's desktop.
+const isHeadlessTest = process.env.HEADLESS_TEST === '1';
+
 app.on('ready', () => {
+  if (isHeadlessTest && process.platform === 'darwin') {
+    app.dock.hide();
+  }
 
   const mainWindow = createWindow('main', {
     width: 1000,
     height: 600,
-    ...(headless && { show: false }),
+    show: !isHeadlessTest,
     webPreferences: {
+      backgroundThrottling: !isHeadlessTest, // hidden windows otherwise throttle timers/animations
       nodeIntegration: true,
       contextIsolation: false,
       preload: path.join(__dirname, 'main_preload.js'),

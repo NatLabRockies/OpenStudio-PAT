@@ -73,12 +73,6 @@ To specify number of workers (default is 4) and retries to handle the parallel t
 npm run test:parallel -- --workers=2 --retries=2
 ```
 
-To keep the app window hidden and off the macOS dock while tests run locally (so they don't steal focus), set `HEADLESS_TEST=1`:
-
-```
-HEADLESS_TEST=1 npm run test
-```
-
 The `test` script runs the following commands in order:
 
 1. `test:setup`, which runs:
@@ -97,6 +91,14 @@ You can run each of these scripts on an as-needed basis to speed up development 
   ```
   npm run test:parallel -- run-page
   ```
+
+### Hidden test windows
+
+Tests launch PAT with `HEADLESS_TEST=1`, which keeps the window hidden (and, on macOS, the Dock icon) so test runs don't steal focus. To watch a run, set `HEADLESS_TEST=0`:
+
+```
+HEADLESS_TEST=0 npm run test:parallel -- nav
+```
 
 ### Potential false negative Parallel tests
 
