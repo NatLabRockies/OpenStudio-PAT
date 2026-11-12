@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
+import fs from 'fs';
 import { appHooksSetup, describeProjects } from './shared.spec';
 import { App } from '../App';
 import { EXPECTED_DETAILS_BY_PAGE, Page, Projects } from '../constants';
+import { IPC_MAIN_HANDLE_MOCKS } from '../mocks';
 import { NavPO, ReportsPO } from '../page-objects';
 
 // window.patBridge (app/electron/main_preload.js) and its main-process channels (app/electron/ipc.js).
@@ -113,15 +115,69 @@ test.describe('pat:shell:openExternal', () => {
 });
 
 test.describe('pat:shell:openPath', () => {
-  test('rejects a path that is not a string', async () => {
-    expect((await invoke('pat:shell:openPath', { path: '/' })).error).toBeTruthy();
+  // Only an existing local file named measure.rb or results.csv is opened (the two files the app opens)
+  const rejected: [string, any, string][] = [
+    ['a path that is not a string', { path: '/' }, 'path must be a string'],
+    ['a relative path', 'results.csv', 'path must be absolute and local'],
+    ['a UNC path', '\\\\host\\share\\results.csv', 'path must be absolute and local'],
+    ['a UNC path with forward slashes', '//host/share/results.csv', 'path must be absolute and local'],
+    ['an application', '/System/Applications/Calculator.app', 'only measure.rb and results.csv can be opened'],
+    ['a script', '/tmp/run.command', 'only measure.rb and results.csv can be opened'],
+    ['a missing file', '/nonexistent/measure.rb', 'no such file']
+  ];
+  for (const [name, file, message] of rejected) {
+    test(`rejects ${name}`, async () => {
+      await stubInMain('shell', 'openPath', '');
+      expect((await invoke('pat:shell:openPath', file)).error).toContain(message);
+      expect(await stubCalls()).toEqual([]);
+    });
+  }
+
+  test('rejects an existing file with another name, and a directory with an allowed name', async ({}, testInfo) => {
+    const script = testInfo.outputPath('run.command');
+    const directory = testInfo.outputPath('results.csv');
+    fs.writeFileSync(script, '');
+    fs.mkdirSync(directory);
+    await stubInMain('shell', 'openPath', '');
+    expect((await invoke('pat:shell:openPath', script)).error).toContain('only measure.rb and results.csv');
+    expect((await invoke('pat:shell:openPath', directory)).error).toContain('no such file');
+    expect(await stubCalls()).toEqual([]);
   });
 
-  test('passes a string to shell.openPath and returns its result', async () => {
-    await stubInMain('shell', 'openPath', '');
-    expect(await invoke('pat:shell:openPath', '/some/folder')).toEqual({ value: '' });
-    expect(await stubCalls()).toEqual([['/some/folder']]);
-  });
+  // Through window.patBridge, not a literal channel name: openPath is the one member that is not rerouted to a
+  // "test-" channel in the test env, so this also pins the preload's "pat:<item>:<fn>" channel names
+  for (const name of ['measure.rb', 'results.csv']) {
+    test(`patBridge.shell.openPath passes an existing ${name} to shell.openPath and returns its result`, async ({}, testInfo) => {
+      const file = testInfo.outputPath(name);
+      fs.writeFileSync(file, '');
+      await stubInMain('shell', 'openPath', '');
+      expect(await App.page.evaluate(file => (window as any).patBridge.shell.openPath(file), file)).toBe('');
+      expect(await stubCalls()).toEqual([[file]]);
+    });
+  }
+});
+
+// In the test env the bridge sends dialogs and openExternal to the "test-" channels that Playwright mocks
+test.describe('window.patBridge in the test env', () => {
+  const cases: [string, string, any][] = [
+    ['dialog.showOpenDialog', IPC_MAIN_HANDLE_MOCKS.showOpenDialogChannel, { properties: ['openDirectory'] }],
+    ['dialog.showMessageBox', IPC_MAIN_HANDLE_MOCKS.showMessageBoxChannel, { message: 'Hello' }],
+    ['shell.openExternal', IPC_MAIN_HANDLE_MOCKS.openExternalChannel, 'https://www.openstudio.net/']
+  ];
+  for (const [member, channel, arg] of cases) {
+    test(`${member} calls ${channel}`, async () => {
+      const argsPromise = App.mockIpcMainHandle(channel, 'mocked');
+      const result = await App.page.evaluate(
+        ({ member, arg }) => {
+          const [item, fn] = member.split('.');
+          return (window as any).patBridge[item][fn](arg);
+        },
+        { member, arg }
+      );
+      expect(result).toBe('mocked');
+      expect(await argsPromise).toEqual([arg]);
+    });
+  }
 });
 
 test.describe('pat:dialog', () => {

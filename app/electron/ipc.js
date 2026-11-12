@@ -28,6 +28,8 @@
 // Main-process side of window.patBridge (see main_preload.js): explicit IPC channels instead of @electron/remote.
 
 import { app, dialog, ipcMain, shell } from 'electron';
+import fs from 'fs';
+import path from 'path';
 
 export default function registerIpc(mainWindow, env) {
   // Only the main window's page may use these channels, not the reports/server webviews
@@ -71,8 +73,17 @@ export default function registerIpc(mainWindow, env) {
     }
     return shell.openExternal(url);
   });
-  handle('pat:shell:openPath', path => {
-    if (typeof path !== 'string') throw new Error('pat:shell:openPath: path must be a string');
-    return shell.openPath(path);
+  // shell.openPath launches whatever it is given (applications, scripts, network paths), so only the two files
+  // the app opens are allowed: a measure's measure.rb and a project's results.csv
+  handle('pat:shell:openPath', file => {
+    const fail = reason => {
+      throw new Error('pat:shell:openPath: ' + reason);
+    };
+    if (typeof file !== 'string') fail('path must be a string');
+    // UNC paths are refused before the file system is asked: a stat would already contact the host
+    if (!path.isAbsolute(file) || /^(\\\\|\/\/)/.test(file)) fail('path must be absolute and local');
+    if (!['measure.rb', 'results.csv'].includes(path.basename(file))) fail('only measure.rb and results.csv can be opened');
+    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) fail('no such file');
+    return shell.openPath(file);
   });
 }
