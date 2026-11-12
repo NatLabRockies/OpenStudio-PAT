@@ -79,11 +79,14 @@ export default function registerIpc(mainWindow, env) {
         lastDir = '';
       }
     }
-    const useLastDir = lastDir && !(options && options.defaultPath) && fs.existsSync(lastDir);
+    // Async check: the folder may be on a slow or unreachable network share
+    const useLastDir = lastDir && !(options && options.defaultPath) &&
+      await fs.promises.access(lastDir).then(() => true, () => false);
     const result = await dialog.showOpenDialog(useLastDir ? { ...options, defaultPath: lastDir } : options);
     if (!result.canceled && result.filePaths.length) {
       lastDir = path.dirname(result.filePaths[0]);
-      fs.writeFileSync(lastDirFile, lastDir);
+      // A failed write must not lose the selection
+      fs.promises.writeFile(lastDirFile, lastDir).catch(console.error);
     }
     return result;
   });
