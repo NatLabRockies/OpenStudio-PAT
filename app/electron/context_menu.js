@@ -33,26 +33,10 @@ const env = getEnv(app.getAppPath());
 export function contextMenu() {
   'use strict';
 
-  const cut = new MenuItem({
-    label: 'Cut',
-    click: () => {
-      document.execCommand('cut');
-    }
-  });
-
-  const copy = new MenuItem({
-    label: 'Copy',
-    click: () => {
-      document.execCommand('copy');
-    }
-  });
-
-  const paste = new MenuItem({
-    label: 'Paste',
-    click: () => {
-      document.execCommand('paste');
-    }
-  });
+  // Roles, not document.execCommand: Electron 33+ disables execCommand('paste') in the renderer
+  const cut = new MenuItem({role: 'cut'});
+  const copy = new MenuItem({role: 'copy'});
+  const paste = new MenuItem({role: 'paste'});
 
   // const inspect = new MenuItem({
   //   label: 'Inspect',
@@ -79,7 +63,7 @@ export function contextMenu() {
     switch (e.target.nodeName) {
       case 'TEXTAREA':
       case 'INPUT':
-        textMenu.popup(getCurrentWindow());
+        textMenu.popup({window: getCurrentWindow()});
         break;
     }
   }, false);
