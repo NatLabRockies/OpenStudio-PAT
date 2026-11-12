@@ -33,8 +33,8 @@ export class NavPO extends BasePageObject {
   }
 
   static async isItemOk(item: Locator, expectedPageDetails: PageDetails) {
-    // Poll: the URL changes before the AngularJS digest moves the `active` class to the new nav item
-    await expect.poll(() => this.getRouteFor(item)).toBe(expectedPageDetails.route);
+    // Retrying assertion: the active item can lag the click while the route changes.
+    await expect(item.locator('a')).toHaveAttribute('href', new RegExp(`^#?${expectedPageDetails.route}$`));
     expect(await this.getIconAltFor(item)).toBe(expectedPageDetails.iconAlt);
     expect(await this.getIconImgNameFor(item)).toBe(expectedPageDetails.iconImgName);
   }
