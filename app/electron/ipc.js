@@ -67,7 +67,26 @@ export default function registerIpc(mainWindow, env) {
   });
 
   // No parent window, as before: with one the dialogs would become sheets on macOS
-  handle('pat:dialog:showOpenDialog', options => dialog.showOpenDialog(options));
+  // Electron 43+ opens file dialogs in Downloads unless given a defaultPath. Before that the OS reopened the last
+  // folder used, also after a restart, so that folder is tracked here and kept in userData.
+  const lastDirFile = path.join(app.getPath('userData'), 'last_dialog_dir');
+  let lastDir;
+  handle('pat:dialog:showOpenDialog', async options => {
+    if (lastDir === undefined) {
+      try {
+        lastDir = fs.readFileSync(lastDirFile, 'utf8');
+      } catch (e) {
+        lastDir = '';
+      }
+    }
+    const useLastDir = lastDir && !(options && options.defaultPath) && fs.existsSync(lastDir);
+    const result = await dialog.showOpenDialog(useLastDir ? { ...options, defaultPath: lastDir } : options);
+    if (!result.canceled && result.filePaths.length) {
+      lastDir = path.dirname(result.filePaths[0]);
+      fs.writeFileSync(lastDirFile, lastDir);
+    }
+    return result;
+  });
   handle('pat:dialog:showMessageBox', options => dialog.showMessageBox(options));
 
   handle('pat:shell:openExternal', url => {

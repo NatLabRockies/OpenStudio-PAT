@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { appHooksSetup, describeProjects } from './shared.spec';
 import { App } from '../App';
 import { EXPECTED_DETAILS_BY_PAGE, Page, Projects } from '../constants';
@@ -178,10 +180,20 @@ test.describe('window.patBridge in the test env', () => {
 test.describe('pat:dialog', () => {
   test('showOpenDialog passes its options to dialog.showOpenDialog, without a parent window', async () => {
     const result = { canceled: false, filePaths: ['/some/folder'] };
-    const options = { title: 'Open', properties: ['openDirectory'] };
+    // With a defaultPath the options are passed on unchanged
+    const options = { title: 'Open', properties: ['openDirectory'], defaultPath: '/elsewhere' };
     await stubInMain('dialog', 'showOpenDialog', result);
     expect(await invoke('pat:dialog:showOpenDialog', options)).toEqual({ value: result });
     expect(await stubCalls()).toEqual([[options]]);
+  });
+
+  test('showOpenDialog reopens in the folder of the last selection', async () => {
+    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'pat-dialog-'));
+    const options = { properties: ['openDirectory'] };
+    await stubInMain('dialog', 'showOpenDialog', { canceled: false, filePaths: [path.join(folder, 'project')] });
+    await invoke('pat:dialog:showOpenDialog', options);
+    await invoke('pat:dialog:showOpenDialog', options);
+    expect((await stubCalls())[1]).toEqual([{ ...options, defaultPath: folder }]);
   });
 
   test('showMessageBox passes its options to dialog.showMessageBox, without a parent window', async () => {
