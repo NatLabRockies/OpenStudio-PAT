@@ -15,8 +15,8 @@ const { babel } = require('@rollup/plugin-babel');
 var eslint = function (fix) {
   fix = !!fix;
   return gulp.src([
-      path.join(conf.paths.src, '**/*.js'),
-      '!' + path.join(conf.paths.src, 'node_modules/**')
+      path.posix.join(conf.paths.src, '**/*.js'),
+      '!' + path.posix.join(conf.paths.src, 'node_modules/**')
     ], {base: '.'})
     .pipe($.eslint({fix: fix}))
     .pipe($.eslint.format())

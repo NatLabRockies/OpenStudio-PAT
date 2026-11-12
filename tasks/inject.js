@@ -41,7 +41,7 @@ const NPM_JS_FILE_PATHS = [
 
 function partials() {
   const parentDirs = path.join(conf.paths.src, '/app/');
-  return gulp.src(path.join(conf.paths.src, '/app/**/*.html'))
+  return gulp.src(path.posix.join(conf.paths.src, '/app/**/*.html'))
     .pipe(rename(p => {
       if (p.dirname.startsWith(parentDirs)) {
         p.dirname = p.dirname.substring(parentDirs.length);
@@ -65,12 +65,12 @@ function partials() {
 
 function finalizeInject() {
   var injectAppStyles = gulp.src([
-    path.join(conf.paths.tmp, '/serve/app/**/*.css'),
-    path.join('!' + conf.paths.tmp, '/serve/app/**/bootstrap.css')
+    path.posix.join(conf.paths.tmp, '/serve/app/**/*.css'),
+    path.posix.join('!' + conf.paths.tmp, '/serve/app/**/bootstrap.css')
   ], {read: false});
-  var injectBootstrapStyles = gulp.src([path.join(conf.paths.tmp, '/serve/app/**/bootstrap.css')], {read: false});
-  var injectScripts = gulp.src([path.join(conf.paths.tmp, '/serve/app/**/*.module.js')], {read: false});
-  var partialsInjectFile = gulp.src(path.join(conf.paths.tmp, '/serve/app/templateCacheHtml.js'), {read: false});
+  var injectBootstrapStyles = gulp.src([path.posix.join(conf.paths.tmp, '/serve/app/**/bootstrap.css')], {read: false});
+  var injectScripts = gulp.src([path.posix.join(conf.paths.tmp, '/serve/app/**/*.module.js')], {read: false});
+  var partialsInjectFile = gulp.src(path.posix.join(conf.paths.tmp, '/serve/app/templateCacheHtml.js'), {read: false});
 
   var injectOptions = {
     ignorePath: [conf.paths.src, path.join(conf.paths.tmp, '/serve')],
@@ -94,7 +94,7 @@ function finalizeInject() {
   };
 
 
-  var stream = gulp.src(path.join(conf.paths.src, '/*.html'))
+  var stream = gulp.src(path.posix.join(conf.paths.src, '/*.html'))
     .pipe($.inject(injectAppStyles, injectOptions))
     .pipe($.inject(injectBootstrapStyles, bootstrapInjectOptions))
     .pipe($.inject(injectScripts, injectOptions))
@@ -103,7 +103,7 @@ function finalizeInject() {
     .pipe($.inject(npmJsInjectFiles, npmJsInjectOptions));
 
   if (utils.getEnvName() == 'development') {
-    var injectBrowsersyncHelper = gulp.src(path.join(conf.paths.tmp, '/serve/app/browsersync_helper.js'), {read: false});
+    var injectBrowsersyncHelper = gulp.src(path.posix.join(conf.paths.tmp, '/serve/app/browsersync_helper.js'), {read: false});
     var browsersyncInjectOptions = _.extend({}, injectOptions, {starttag: '<!-- inject:browsersync -->'});
     stream = stream.pipe($.inject(injectBrowsersyncHelper, browsersyncInjectOptions));
   }

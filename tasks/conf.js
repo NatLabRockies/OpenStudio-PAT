@@ -10,6 +10,7 @@ const fancyLog = require('fancy-log');
 /**
  *  The main paths of your project handle these with care
  */
+// gulp 5: globs for gulp.src/gulp.watch must use forward slashes, so build them with path.posix.join
 exports.paths = {
   src: 'app',
   dist: 'build',
