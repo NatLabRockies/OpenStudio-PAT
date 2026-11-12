@@ -143,7 +143,7 @@ function finalizeBuild() {
 }
 
 function copyManifest() {
-  jetpack.copy('manifest.json', path.join(conf.paths.dist, '/manifest.json'), {overwrite: true});
+  return jetpack.copyAsync('manifest.json', path.join(conf.paths.dist, '/manifest.json'), {overwrite: true});
 }
 
 // Binary dependency management
