@@ -8,6 +8,10 @@ export const startServerTests = () =>
     test.describe('click "Start Local Server" button', () => {
       let serverStartedPromise: Promise<void>;
       test.beforeAll(async () => {
+        // Another server on 8080 (e.g. a concurrent test run) would make the start check pass falsely.
+        if (await App.isServerRunning()) {
+          throw new Error('A server is already listening on localhost:8080; stop it before running the serial tests.');
+        }
         await ServerToolsModalPO.clickButton(
           ServerToolsModalPO.EXPECTED_BODY_BUTTONS.START,
           ServerToolsModalPO.bodyButtons
