@@ -35,7 +35,8 @@ const info = ipcRenderer.sendSync('pat:app-info');
 const invoke = (item, fn, mockedInTest) => (...args) =>
   ipcRenderer.invoke(info.test && mockedInTest ? `test-${item}-${fn}` : `pat:${item}:${fn}`, ...args);
 
-window.patBridge = {
+// No bridge for a page main does not trust (ipc.js answers null)
+if (info) window.patBridge = {
   appPath: info.appPath,
   paths: info.paths,
   quit: () => ipcRenderer.send('pat:quit'),

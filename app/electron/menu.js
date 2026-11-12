@@ -30,7 +30,7 @@
 
 import { app, ipcMain, Menu } from 'electron';
 
-export function setApplicationMenu(mainWindow) {
+export function setApplicationMenu(mainWindow, trusted) {
   const toRenderer = item => {
     if (!mainWindow.isDestroyed()) mainWindow.webContents.send('pat:menu', item.id);
   };
@@ -217,7 +217,7 @@ export function setApplicationMenu(mainWindow) {
   // The renderer starts in its default language on every (re)load; keep the radio items in step with it
   const languageIds = {en: 'English', fr: 'French'};
   ipcMain.on('pat:menu:language', (event, language) => {
-    if (event.sender !== mainWindow.webContents || !Object.keys(languageIds).includes(language)) return;
+    if (!trusted(event) || !Object.keys(languageIds).includes(language)) return;
     menu.getMenuItemById(languageIds[language]).checked = true;
   });
 }

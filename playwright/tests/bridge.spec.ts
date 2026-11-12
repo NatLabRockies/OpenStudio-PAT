@@ -4,7 +4,7 @@ import { appHooksSetup, describeProjects } from './shared.spec';
 import { App } from '../App';
 import { EXPECTED_DETAILS_BY_PAGE, Page, Projects } from '../constants';
 import { IPC_MAIN_HANDLE_MOCKS } from '../mocks';
-import { NavPO, ReportsPO } from '../page-objects';
+import { NavPO, ReportsPO, SelectProjectModalPO } from '../page-objects';
 
 // window.patBridge (app/electron/main_preload.js) and its main-process channels (app/electron/ipc.js).
 // Nothing here opens a native dialog, menu or browser: the Electron functions behind the channels are replaced in
@@ -195,6 +195,46 @@ test.describe('pat:dialog', () => {
     await stubInMain('dialog', 'showMessageBox', result);
     expect(await invoke('pat:dialog:showMessageBox', options)).toEqual({ value: result });
     expect(await stubCalls()).toEqual([[options]]);
+  });
+});
+
+// app/background.js: the channels trust the app's page in the main window, so the window must not show another one
+test.describe('main window', () => {
+  const bridgeType = () => App.page.evaluate(() => typeof (window as any).patBridge);
+  // Added after the app's own will-navigate listener, so defaultPrevented is what the app decided
+  const recordNavigations = () =>
+    App.instance.evaluate(({ BrowserWindow }) => {
+      const navigations: any[] = ((global as any).patNavigations = []);
+      BrowserWindow.getAllWindows()[0].webContents.on('will-navigate', (event, url) =>
+        navigations.push({ file: url.split('#')[0].split('/').pop(), prevented: event.defaultPrevented })
+      );
+    });
+  const navigations = () => App.instance.evaluate(() => (global as any).patNavigations);
+
+  test('cannot navigate to another page', async () => {
+    await SelectProjectModalPO.isOk();
+    await recordNavigations();
+    // A harmless target inside the build directory
+    await App.page.evaluate(() => {
+      location.href = location.href.split('#')[0].replace('index.html', 'env.json');
+    });
+    await expect.poll(navigations).toEqual([{ file: 'env.json', prevented: true }]);
+    expect(App.page.url()).toContain('/index.html');
+    expect(await bridgeType()).toBe('object');
+  });
+
+  test('can still reload its own page, and the bridge is there again', async () => {
+    await SelectProjectModalPO.isOk();
+    await recordNavigations();
+    await App.page.evaluate(() => location.reload()).catch(() => {});
+    await expect.poll(navigations).toEqual([{ file: 'index.html', prevented: false }]);
+    await SelectProjectModalPO.isOk();
+    expect(await bridgeType()).toBe('object');
+  });
+
+  test('cannot open a child window', async () => {
+    expect(await App.page.evaluate(() => window.open('about:blank') === null)).toBe(true);
+    expect(await App.instance.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(1);
   });
 });
 

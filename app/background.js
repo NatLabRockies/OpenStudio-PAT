@@ -89,9 +89,18 @@ app.on('ready', () => {
   }
 
   const env = getEnv(app.getAppPath());
-  registerIpc(mainWindow, env);
-  setApplicationMenu(mainWindow);
+  const trusted = registerIpc(mainWindow, env);
+  setApplicationMenu(mainWindow, trusted);
   setContextMenu(mainWindow, env);
+
+  // The main window only ever shows the app's page, which is what the IPC channels trust: no navigation to another
+  // page (a dropped file, a link) and no child windows. A reload of the page itself is still allowed.
+  const page = url => url.split('#')[0];
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (page(url) !== page(mainWindow.webContents.getURL())) event.preventDefault();
+  });
+  mainWindow.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
+
   if (env.name === 'development') {
     mainWindow.loadURL('http://localhost:3000/index.html');
     mainWindow.openDevTools();

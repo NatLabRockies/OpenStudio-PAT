@@ -32,8 +32,11 @@ import fs from 'fs';
 import path from 'path';
 
 export default function registerIpc(mainWindow, env) {
-  // Only the main window's page may use these channels, not the reports/server webviews
-  const trusted = event => event.sender === mainWindow.webContents;
+  // Only the top frame of the main window may use these channels: not the reports/server webviews and not an iframe.
+  // That frame only ever shows the app's page (background.js blocks navigation). Its URL is not checked here: it is
+  // still empty when the preload's pat:app-info arrives before the first navigation has committed.
+  const trusted = event => !mainWindow.isDestroyed() && event.sender === mainWindow.webContents &&
+    !!event.senderFrame && event.senderFrame === mainWindow.webContents.mainFrame;
   const handle = (channel, fn) => ipcMain.handle(channel, (event, ...args) => {
     if (!trusted(event)) throw new Error(channel + ': untrusted sender');
     return fn(...args);
@@ -86,4 +89,6 @@ export default function registerIpc(mainWindow, env) {
     if (!fs.existsSync(file) || !fs.statSync(file).isFile()) fail('no such file');
     return shell.openPath(file);
   });
+
+  return trusted;
 }
