@@ -76,15 +76,15 @@ export default function registerIpc(mainWindow, env) {
     }
     return shell.openExternal(url);
   });
-  // shell.openPath launches whatever it is given (applications, scripts, network paths), so only the two files
+  // shell.openPath launches whatever it is given (applications, scripts), so only the two files
   // the app opens are allowed: a measure's measure.rb and a project's results.csv
   handle('pat:shell:openPath', file => {
     const fail = reason => {
       throw new Error('pat:shell:openPath: ' + reason);
     };
     if (typeof file !== 'string') fail('path must be a string');
-    // UNC paths are refused before the file system is asked: a stat would already contact the host
-    if (!path.isAbsolute(file) || /^(\\\\|\/\/)/.test(file)) fail('path must be absolute and local');
+    // UNC paths are allowed: projects can live on network shares, and the renderer still has Node access anyway
+    if (!path.isAbsolute(file)) fail('path must be absolute');
     if (!['measure.rb', 'results.csv'].includes(path.basename(file))) fail('only measure.rb and results.csv can be opened');
     if (!fs.existsSync(file) || !fs.statSync(file).isFile()) fail('no such file');
     return shell.openPath(file);

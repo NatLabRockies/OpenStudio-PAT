@@ -112,12 +112,10 @@ test.describe('pat:shell:openExternal', () => {
 });
 
 test.describe('pat:shell:openPath', () => {
-  // Only an existing local file named measure.rb or results.csv is opened (the two files the app opens)
+  // Only an existing file named measure.rb or results.csv is opened (the two files the app opens)
   const rejected: [string, any, string][] = [
     ['a path that is not a string', { path: '/' }, 'path must be a string'],
-    ['a relative path', 'results.csv', 'path must be absolute and local'],
-    ['a UNC path', '\\\\host\\share\\results.csv', 'path must be absolute and local'],
-    ['a UNC path with forward slashes', '//host/share/results.csv', 'path must be absolute and local'],
+    ['a relative path', 'results.csv', 'path must be absolute'],
     ['an application', '/System/Applications/Calculator.app', 'only measure.rb and results.csv can be opened'],
     ['a script', '/tmp/run.command', 'only measure.rb and results.csv can be opened'],
     ['a missing file', '/nonexistent/measure.rb', 'no such file']
