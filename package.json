@@ -5,7 +5,7 @@
     "@babel/core": "~7.19.3",
     "@babel/eslint-parser": "~7.19.1",
     "@babel/preset-env": "~7.19.3",
-    "@playwright/test": "~1.26.1",
+    "@playwright/test": "~1.65.0",
     "@rollup/plugin-babel": "~5.3.1",
     "asar": "~3.2.0",
     "babel-plugin-angularjs-annotate": "~0.10.0",
@@ -61,7 +61,7 @@
     "rcedit": "~0.4.0"
   },
   "engines": {
-    "node": "^18"
+    "node": "^22.12 || ^24"
   },
   "scripts": {
     "postinstall": "cd app && npm install",

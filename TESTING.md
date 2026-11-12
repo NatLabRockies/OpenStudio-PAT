@@ -21,7 +21,7 @@ PAT includes two different sets of tests, **Parallel** and **Serial**, which hav
 | Tests are run...                         |                 Independently                  |                         Sequentially                         |
 | Using...                                 |        Fresh app instance for each test        |                     Single app instance                      |
 | If one test fails...                     |             No others are affected             |                    Remaining are skipped                     |
-| # of tests in PAT<br/>at time of writing |                      188                       |                              22                              |
+| # of tests in PAT<br/>at time of writing |                      189                       |                              22                              |
 | Test files location                      |    [`playwright/tests/`](playwright/tests/)    |    [`playwright/tests/serial/`](playwright/tests/serial/)    |
 | Configuration file                       | [`playwright.config.ts`](playwright.config.ts) | [`playwright-serial.config.ts`](playwright-serial.config.ts) |
 
@@ -51,7 +51,7 @@ Here is a list of Playwright-related files & folders:
 - 📁 `reports/playwright/`: HTML report files generated after running tests. The root-level files are for Parallel tests.
   - 📁 `serial/`: Report files for Serial tests
 - 📁 `playwright-results/`: Screenshots & videos taken when running tests (not used at time of writing)
-- 📝 `.github/workflows/playwright.yml`: GitHub Actions template for running tests. At the time of writing, it uses Ubuntu 18.04 and Node 17 for compatibility reasons.
+- 📝 `.github/workflows/playwright.yml`: GitHub Actions template for running tests. It uses Ubuntu 24.04 and Node 24.
 - 📝 `playwright.config.ts`: Configures Parallel tests
 - 📝 `playwright-serial.config.ts`: Configures Serial tests (extends Parallel config)
 

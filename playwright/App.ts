@@ -68,9 +68,15 @@ export class App {
   }
 
   static async getMenuItem(menuItem: string) {
-    return App.instance.evaluate(async ({ app }, params) => app.applicationMenu!.getMenuItemById(params.menuItem), {
-      menuItem
-    });
+    // Return a plain projection: a raw MenuItem is not reliably serialisable across Electron versions
+    return App.instance.evaluate(
+      ({ app }, params) => {
+        const plain = (i: any): any =>
+          i && { label: i.label, submenu: i.submenu && { items: i.submenu.items.map(plain) } };
+        return plain(app.applicationMenu!.getMenuItemById(params.menuItem));
+      },
+      { menuItem }
+    );
   }
 
   static async clickMenuItem(menuItems: string[]) {
