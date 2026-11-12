@@ -15,7 +15,7 @@ var releaseForOs = {
 };
 
 function reports() {
-  return gulp.src(path.join(conf.paths.src, 'app/reports/projectReports/*.html'))
+  return gulp.src(path.posix.join(conf.paths.src, 'app/reports/projectReports/*.html'))
     .pipe(flatten())
     .pipe(gulp.dest(conf.paths.dist));
 }

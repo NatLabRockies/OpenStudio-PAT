@@ -17,10 +17,10 @@ async function styles() {
   };
 
   var injectFiles = gulp.src([
-    path.join(conf.paths.src, '/app/**/*.scss'),
-    path.join('!' + conf.paths.src, '/app/bootstrap.scss'),
-    path.join('!' + conf.paths.src, '/app/index.scss'),
-    path.join('!' + conf.paths.src, '/app/styles/**/*')
+    path.posix.join(conf.paths.src, '/app/**/*.scss'),
+    path.posix.join('!' + conf.paths.src, '/app/bootstrap.scss'),
+    path.posix.join('!' + conf.paths.src, '/app/index.scss'),
+    path.posix.join('!' + conf.paths.src, '/app/styles/**/*')
   ], {read: false});
 
   var injectOptions = {
@@ -43,8 +43,8 @@ async function styles() {
   var indexFilter = $.filter('**/index.scss', {restore: true});
 
   return gulp.src([
-      path.join(conf.paths.src, '/app/bootstrap.scss'),
-      path.join(conf.paths.src, '/app/index.scss')
+      path.posix.join(conf.paths.src, '/app/bootstrap.scss'),
+      path.posix.join(conf.paths.src, '/app/index.scss')
     ])
     .pipe(bootstrapFilter)
     .pipe($.inject(npmInjectFiles, npmInjectOptions))

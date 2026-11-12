@@ -41,4 +41,4 @@ module.exports.getElectronVersion = function () {
   return manifest.devDependencies['electron'].substring(1);
 };
 
-module.exports.mapNpmFilePath = filePath => path.join(conf.paths.src, '/node_modules/', filePath);
+module.exports.mapNpmFilePath = filePath => path.posix.join(conf.paths.src, '/node_modules/', filePath);

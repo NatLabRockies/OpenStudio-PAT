@@ -25,31 +25,12 @@
  *  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************************************************************/
-import { app, dialog as remoteDialog, shell as remoteShell } from '@electron/remote';
-import { ipcRenderer } from 'electron';
-import { getEnv } from '../../env';
-
+// dialog and shell of the main process, through the preload bridge (app/electron/main_preload.js).
+// In the test env the bridge sends showOpenDialog, showMessageBox and openExternal to channels mocked by Playwright.
 export class RemoteHelper {
   constructor() {
     const vm = this;
-    vm.env = getEnv(app.getAppPath());
-    vm.populateItem('dialog', remoteDialog, ['showOpenDialog', 'showMessageBox']);
-    vm.populateItem('shell', remoteShell, ['openExternal']);
-  }
-
-  populateItem(itemName, remoteItemRef, fnsToMock) {
-    const vm = this;
-
-    if (vm.env.name === 'test') {
-      const mockedItemRef = {};
-      for (const k in remoteItemRef) {
-        mockedItemRef[k] = fnsToMock.includes(k)
-          ? (...args) => ipcRenderer.invoke(`test-${itemName}-${k}`, ...args)
-          : remoteItemRef[k];
-      }
-      vm[itemName] = mockedItemRef;
-    } else {
-      vm[itemName] = remoteItemRef;
-    }
+    vm.dialog = window.patBridge.dialog;
+    vm.shell = window.patBridge.shell;
   }
 }

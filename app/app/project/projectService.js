@@ -28,7 +28,6 @@
 import jetpack from 'fs-jetpack';
 //import os from 'os';
 import path from 'path';
-import { app } from '@electron/remote';
 import jsZip from 'jszip';
 import fs from 'fs';
 import archiver from 'archiver';
@@ -131,10 +130,10 @@ export class Project {
     vm.analysisID = '';
     vm.datapoints = [];
 
-    const src = jetpack.cwd(app.getPath('userData'));
+    const src = jetpack.cwd(window.patBridge.paths.userData);
     vm.railsDir = jetpack.dir(path.resolve(src.path() + '/openstudioServer/openstudio-server/server'));
     // aws path
-    vm.awsDir = jetpack.dir(app.getPath('appData') + '/.aws');
+    vm.awsDir = jetpack.dir(window.patBridge.paths.appData + '/.aws');
     if (vm.Message.showDebug()) vm.$log.debug('.aws dir location: ', vm.awsDir.path());
 
     // set my measures dir
