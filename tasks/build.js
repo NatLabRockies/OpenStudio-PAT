@@ -25,7 +25,7 @@ var $ = require('gulp-load-plugins')({
 
 async function background() {
   return gulp.src([path.join(conf.paths.tmp, '/serve/app/background.js'), path.join(conf.paths.tmp, '/serve/app/main_preload.js')])
-  .pipe($.uglify()).on('error', await conf.errorHandler('Uglify background.js'))
+  .pipe($.uglify()).on('error', await conf.errorHandler('Uglify background.js/main_preload.js'))
   .pipe($.flatten())
   .pipe(gulp.dest(path.join(conf.paths.dist, '/')));
 }

@@ -86,22 +86,19 @@ test('exitClicked() is false while the window is not closing', async () => {
   expect(await App.page.evaluate(() => (window as any).patBridge.exitClicked())).toBe(false);
 });
 
-test('quit() reaches app.quit in the main process', async () => {
-  await App.instance.evaluate(({ app }) => {
-    const quit = app.quit;
-    app.quit = () => {
-      app.quit = quit;
-      (global as any).patQuitCalled = true;
-    };
-  });
+// A real quit: if the app did not exit, this fails here and not in the teardown
+test('quit() quits the app', async () => {
+  const closed = App.instance.waitForEvent('close');
   await App.page.evaluate(() => (window as any).patBridge.quit());
-  await expect.poll(() => App.instance.evaluate(() => (global as any).patQuitCalled)).toBe(true);
+  await closed;
 });
 
 test.describe('pat:shell:openExternal', () => {
   for (const url of ['file:///etc/hosts', 'javascript:alert(1)', 'mailto:someone@example.com', 'localhost:8080', 42]) {
     test(`rejects ${JSON.stringify(url)}`, async () => {
-      expect((await invoke('pat:shell:openExternal', url)).error).toBeTruthy();
+      await stubInMain('shell', 'openExternal');
+      expect((await invoke('pat:shell:openExternal', url)).error).toContain('only http and https URLs are allowed');
+      expect(await stubCalls()).toEqual([]);
     });
   }
 
@@ -267,12 +264,16 @@ describeProjects(() => {
   test('the reports webview gets neither the bridge nor its channels', async () => {
     await NavPO.clickIcon(EXPECTED_DETAILS_BY_PAGE[Page.REPORTS].iconAlt);
     await expect(ReportsPO.webview).toBeVisible();
+    // true is what the main window would be told while it is closing
+    await App.instance.evaluate(() => ((global as any).exitClicked = true));
     const fromWebview = () =>
       App.instance.evaluate(({ webContents }) => {
         const guest = webContents.getAllWebContents().find(wc => wc.getType() === 'webview');
         if (!guest || guest.isLoading()) return null;
         return guest.executeJavaScript(`(async () => {
           const { ipcRenderer } = require('electron');
+          ipcRenderer.send('pat:quit');
+          ipcRenderer.send('pat:menu:language', 'fr');
           return {
             bridge: typeof window.patBridge,
             appInfo: ipcRenderer.sendSync('pat:app-info'),
@@ -287,5 +288,13 @@ describeProjects(() => {
       exitClicked: false,
       openPath: expect.stringContaining('untrusted sender')
     });
+    // pat:quit and pat:menu:language were ignored: the app still runs and "French" is not checked
+    const stillRunning = () =>
+      App.instance.evaluate(({ app }) => ({
+        exitClicked: ((global as any).exitClicked = false),
+        french: app.applicationMenu!.getMenuItemById('French')!.checked
+      }));
+    expect(await fromWebview()).toMatchObject({ appInfo: null });
+    expect(await stillRunning()).toEqual({ exitClicked: false, french: false });
   });
 }, [Projects.OFFICE_HVAC]);
