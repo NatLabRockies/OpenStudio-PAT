@@ -29,6 +29,10 @@ PAT uses [playwright](https://playwright.dev/) to conduct automated E2E testing.
 	npm install
 	npx gulp installDeps
 	```
+	Behind a proxy, `installDeps` only uses `HTTP_PROXY` / `HTTPS_PROXY` when `NODE_USE_ENV_PROXY=1` is also set (needs Node 24, or 22.21 or newer):
+	```
+	NODE_USE_ENV_PROXY=1 npx gulp installDeps
+	```
 
 3. Start the PAT application in develop mode:
 	```

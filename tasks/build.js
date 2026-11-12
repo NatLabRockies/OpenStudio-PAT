@@ -235,6 +235,8 @@ async function downloadFile(depend, uri, destPath) {
     await pipeline(Readable.fromWeb(response.body), counter, fs.createWriteStream(destPath), {signal: controller.signal});
   } catch (err) {
     fs.rmSync(destPath, {force: true});
+    // fetch() reports network errors as a bare 'fetch failed'; the reason (ENOTFOUND, ECONNREFUSED, ...) is in err.cause
+    if (err.cause) throw new Error(`Download of ${uri} failed: ${err.cause.code || err.cause.message || err.cause}`, {cause: err});
     throw err;
   } finally {
     clearTimeout(timer);
