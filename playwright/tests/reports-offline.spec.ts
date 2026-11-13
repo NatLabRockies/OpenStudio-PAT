@@ -22,7 +22,10 @@ describeProjects(() => {
           callback({ cancel });
         });
         session.defaultSession.webRequest.onErrorOccurred(details => {
-          if (fromWebview(details)) requests.failed.push(`${details.error} ${details.url}`);
+          // Selecting a report aborts whatever the default report was still loading
+          if (fromWebview(details) && details.error !== 'net::ERR_ABORTED') {
+            requests.failed.push(`${details.error} ${details.url}`);
+          }
         });
       });
 
