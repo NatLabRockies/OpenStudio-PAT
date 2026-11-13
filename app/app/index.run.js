@@ -25,9 +25,7 @@
  *  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************************************************************/
-/*global bootlint*/
-
-export function runBlock($rootScope, $state, $window, $document, $translate, toastr, MeasureManager, DependencyManager, Project, BCL, OsServer, SetProject, OpenProject, $log, Message, RemoteHelper) {
+export function runBlock($rootScope, $state, $window, $translate, toastr, MeasureManager, DependencyManager, Project, BCL, OsServer, SetProject, OpenProject, $log, Message, RemoteHelper) {
   'ngInject';
 
   const shell = RemoteHelper.shell;
@@ -118,13 +116,6 @@ export function runBlock($rootScope, $state, $window, $document, $translate, toa
 
     // Prevent exit.  Uncomment to test
     //e.returnValue = false;
-  };
-
-  $window.lint = () => {
-    const s = $document[0].createElement('script');
-    s.src = 'https://maxcdn.bootstrapcdn.com/bootlint/latest/bootlint.min.js';
-    s.onload = () => bootlint.showLintReportForCurrentDocument([]);
-    $document[0].body.appendChild(s);
   };
 
 
