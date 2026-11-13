@@ -60,7 +60,7 @@
     "rcedit": "~0.4.0"
   },
   "engines": {
-    "node": ">=22.12"
+    "node": "^22.13.0 || >=24"
   },
   "scripts": {
     "postinstall": "install-electron && cd app && npm install",

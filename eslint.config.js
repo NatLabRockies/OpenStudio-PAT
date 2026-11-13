@@ -5,6 +5,7 @@ const globals = require('globals');
 const lodash = require('eslint-plugin-lodash');
 
 module.exports = [
+  {ignores: ['app/app/reports/projectReports/vendor/**']}, // third-party minified files
   js.configs.recommended,
   {
     languageOptions: {
