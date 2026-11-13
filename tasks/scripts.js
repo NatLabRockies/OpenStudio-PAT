@@ -18,10 +18,10 @@ var eslint = function (fix) {
       path.posix.join(conf.paths.src, '**/*.js'),
       '!' + path.posix.join(conf.paths.src, 'node_modules/**')
     ], {base: '.'})
-    .pipe($.eslint({fix: fix}))
-    .pipe($.eslint.format())
+    .pipe($.eslintNew({fix: fix}))
+    .pipe($.eslintNew.format())
     .pipe(fix ? gulp.dest('.') : through2.obj());
-    //.pipe($.eslint.failAfterError());
+    //.pipe($.eslintNew.failAfterError());
 };
 
 function lint() {
