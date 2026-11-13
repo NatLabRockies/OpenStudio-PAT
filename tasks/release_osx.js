@@ -1,4 +1,3 @@
-/*eslint angular/log: 0*/
 'use strict';
 
 var Q = require('q');
@@ -31,8 +30,8 @@ var copyRuntime = function () {
 };
 
 var cleanupRuntime = function () {
-  finalAppDir.remove('Contents/Resources/default_app');
-  finalAppDir.remove('Contents/Resources/atom.icns');
+  finalAppDir.remove('Contents/Resources/default_app.asar');
+  finalAppDir.remove('Contents/Resources/electron.icns');
   return Q();
 };
 

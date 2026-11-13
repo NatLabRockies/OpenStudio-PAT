@@ -28,7 +28,6 @@
 import jetpack from 'fs-jetpack';
 import os from 'os';
 import path from 'path';
-import { app } from '@electron/remote';
 import { getEnv } from '../../env';
 export class ReportsController {
 
@@ -41,7 +40,7 @@ export class ReportsController {
     vm.$log = $log;
     vm.$scope = $scope;
     vm.Project = Project;
-    vm.env = getEnv(app.getAppPath());
+    vm.env = getEnv(window.patBridge.appPath);
     vm.preloadPath = 'file://';
     vm.reportDir = Project.getProjectDir();
     vm.reportDirPath = path.resolve(vm.reportDir.path());
@@ -64,7 +63,7 @@ export class ReportsController {
     if (vm.Message.showDebug()) vm.$log.debug('Algorithmic METADATA: ', vm.algorithmic_metadata);
 
     // preload.js path depends on environment.  we need full path to file
-    vm.$scope.preloadPath = `file://${app.getAppPath()}/scripts/preload.js`;
+    vm.$scope.preloadPath = `file://${window.patBridge.appPath}/scripts/preload.js`;
 
     if (vm.Message.showDebug()) vm.$log.debug('PRELOAD PATH: ', vm.$scope.preloadPath);
 
@@ -72,7 +71,7 @@ export class ReportsController {
     var html_reports = [];
     if (vm.env && (vm.env.name == 'production')) {
       // This will resolve to the path to app.asaar
-      var appDir = vm.jetpack.cwd(app.getAppPath());
+      var appDir = vm.jetpack.cwd(window.patBridge.appPath);
       html_reports = appDir.find('../projectReports', {matching: '*.html'});
     } else {
       html_reports = vm.jetpack.find('app/app/reports/projectReports', {matching: '*.html'});

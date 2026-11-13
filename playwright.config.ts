@@ -3,7 +3,7 @@ import { getReporter } from "./playwright/config-reporter";
 
 const config: PlaywrightTestConfig = {
   testDir: "./playwright/tests",
-  testIgnore: "serial",
+  testIgnore: ["serial", "**/shared.spec.ts"],
   fullyParallel: true,
   timeout: 30_000,
   expect: {

@@ -25,13 +25,12 @@
  *  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************************************************************/
-import { app } from '@electron/remote';
 import jetpack from 'fs-jetpack';
 import AdmZip from 'adm-zip';
 import os from 'os';
 
 import { getEnv } from '../../env';
-const env = getEnv(app.getAppPath());
+const env = getEnv(window.patBridge.appPath);
 
 export class DependencyManager {
 
@@ -54,9 +53,9 @@ export class DependencyManager {
     vm.downloadStatus = 'N/A';
     vm.Message = Message;
 
-    vm.tempDir = jetpack.cwd(app.getPath('temp'));
-    if (vm.Message.showDebug()) vm.$log.debug('TEMPDIR HERE: ', app.getPath('temp'));
-    vm.src = jetpack.cwd(app.getAppPath() + '/Resources/');
+    vm.tempDir = jetpack.cwd(window.patBridge.paths.temp);
+    if (vm.Message.showDebug()) vm.$log.debug('TEMPDIR HERE: ', window.patBridge.paths.temp);
+    vm.src = jetpack.cwd(window.patBridge.appPath + '/Resources/');
     if (vm.Message.showDebug()) vm.$log.debug('src:', vm.src.path());
   }
 
@@ -80,7 +79,7 @@ export class DependencyManager {
 
     if (env.name == 'production') {
       if (os.platform() == 'win32') {
-        prefixPath = jetpack.cwd(app.getPath('exe'), '..');
+        prefixPath = jetpack.cwd(window.patBridge.paths.exe, '..');
 
         if (name == 'PAT_OS_CLI_PATH') {
           return prefixPath.path('OpenStudio/bin/openstudio' + exeExt);
@@ -96,7 +95,7 @@ export class DependencyManager {
           return prefixPath.path('EnergyPlus/energyplus' + exeExt);
         }
       } else {
-        prefixPath = jetpack.cwd(app.getPath('exe'), '../..', 'Resources');
+        prefixPath = jetpack.cwd(window.patBridge.paths.exe, '../..', 'Resources');
 
         if (name == 'PAT_OS_CLI_PATH') {
           return prefixPath.path('OpenStudio/bin/openstudio' + exeExt);
@@ -113,7 +112,7 @@ export class DependencyManager {
         }
       }
     } else {
-      prefixPath = jetpack.cwd(app.getAppPath(), '..', 'depend');
+      prefixPath = jetpack.cwd(window.patBridge.appPath, '..', 'depend');
     }
 
     if (env[name]) {

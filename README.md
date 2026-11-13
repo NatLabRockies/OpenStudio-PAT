@@ -21,13 +21,17 @@ PAT uses [playwright](https://playwright.dev/) to conduct automated E2E testing.
 
 ## Getting started
 
-1. Install node v18.7.0 and npm v8 if you don't have them already. You can [use these commands](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#checking-your-version-of-npm-and-nodejs) to check if they are installed. If you don't have them, you can download them with a [Node version manager](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#checking-your-version-of-npm-and-nodejs) (recommended), an OS-compatible [package manager](https://nodejs.org/en/download/package-manager/), or a [pre-built installer](https://nodejs.org/en/download/current/).
+1. Install node v24 (LTS; it ships with npm v11) if you don't have them already. Node 22 (22.13 or newer) and Node 26 also work. You can [use these commands](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#checking-your-version-of-npm-and-nodejs) to check if they are installed. If you don't have them, you can download them with a [Node version manager](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#checking-your-version-of-npm-and-nodejs) (recommended), an OS-compatible [package manager](https://nodejs.org/en/download/package-manager/), or a [pre-built installer](https://nodejs.org/en/download/current/).
 
 2. Use the following commands to clone the PAT repo and install all dependencies:
 	```
 	git clone https://github.com/NREL/OpenStudio-PAT.git
 	npm install
 	npx gulp installDeps
+	```
+	Behind a proxy, `installDeps` only uses `HTTP_PROXY` / `HTTPS_PROXY` when `NODE_USE_ENV_PROXY=1` is also set (needs Node 24, or 22.21 or newer):
+	```
+	NODE_USE_ENV_PROXY=1 npx gulp installDeps
 	```
 
 3. Start the PAT application in develop mode:
@@ -87,7 +91,7 @@ We tested our Linux-specific instructions on Ubuntu 22.04, but they should also 
 	* Run the appropriate command to generate the files.
 		* MacOS:
 			```
-			cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=11 -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_BUILD_TYPE=Release ../
+			cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_BUILD_TYPE=Release ../
 			```
 		* Windows:
 			```

@@ -2,9 +2,9 @@
 
 var path = require('path');
 var gulp = require('gulp');
-var request = require('request');
-var progress = require('request-progress');
-var source = require('vinyl-source-stream');
+var fs = require('fs');
+var { Readable, Transform } = require('stream');
+var { pipeline } = require('stream/promises');
 var jetpack = require('fs-jetpack');
 var conf = require('./conf');
 var utils = require('./utils');
@@ -24,14 +24,14 @@ var $ = require('gulp-load-plugins')({
 });
 
 async function background() {
-  return gulp.src(path.join(conf.paths.tmp, '/serve/app/background.js'))
-  .pipe($.uglify()).on('error', await conf.errorHandler('Uglify background.js'))
+  return gulp.src([path.posix.join(conf.paths.tmp, '/serve/app/background.js'), path.posix.join(conf.paths.tmp, '/serve/app/main_preload.js')])
+  .pipe($.uglify()).on('error', await conf.errorHandler('Uglify background.js/main_preload.js'))
   .pipe($.flatten())
   .pipe(gulp.dest(path.join(conf.paths.dist, '/')));
 }
 
 function preload() {
-  return gulp.src(path.join(conf.paths.src, '/app/reports/preload.js'))
+  return gulp.src(path.posix.join(conf.paths.src, '/app/reports/preload.js'))
     .pipe($.flatten())
     .pipe(gulp.dest(path.join(conf.paths.dist, '/scripts')));
 }
@@ -42,7 +42,7 @@ async function finalizeHtml() {
   const cssFilter = $.filter('**/*.css', {restore: true});
   const notSourceMapFilter = $.filter(['**', '!*.map'], {restore: true});
 
-  return gulp.src(path.join(conf.paths.tmp, '/serve/*.html'), { base: conf.paths.dist })
+  return gulp.src(path.posix.join(conf.paths.tmp, '/serve/*.html'), { base: conf.paths.dist })
     .pipe($.flatten())
     .pipe($.useref({}, $.lazypipe().pipe($.sourcemaps.init, {loadMaps: true})))
     .pipe(jsFilter)
@@ -86,17 +86,17 @@ function fonts() {
   const NPM_FONT_DIRS = ['bootstrap-sass', 'angular-ui-grid'];
   const FONT_EXTENSIONS_GLOB = '/**/*.{eot,svg,ttf,woff,woff2}';
 
-  return gulp.src(NPM_FONT_DIRS.map(fontDir => utils.mapNpmFilePath(`${fontDir}${FONT_EXTENSIONS_GLOB}`)))
+  return gulp.src(NPM_FONT_DIRS.map(fontDir => utils.mapNpmFilePath(`${fontDir}${FONT_EXTENSIONS_GLOB}`)), { encoding: false })
     .pipe($.flatten())
     .pipe(gulp.dest(path.join(conf.paths.dist, '/fonts/')));
 }
 
 function other() {
   return gulp.src([
-    path.join(conf.paths.src, '/**/*'),
-    path.join('!' + conf.paths.src, '/node_modules/**/*'),
-    path.join('!' + conf.paths.src, '/**/*.{html,css,js,scss}')
-  ])
+    path.posix.join(conf.paths.src, '/**/*'),
+    path.posix.join('!' + conf.paths.src, '/node_modules/**/*'),
+    path.posix.join('!' + conf.paths.src, '/**/*.{html,css,js,scss}')
+  ], { encoding: false })
     .pipe($.filter(file => file.stat.isFile()))
     .pipe(rename(p => {
       if (p.dirname.startsWith(conf.paths.src)) {
@@ -106,8 +106,15 @@ function other() {
     .pipe(gulp.dest(path.join(conf.paths.dist, '/')));
 }
 
+// Unpackaged builds load the report pages relative to index.html; packaged apps get them from release_*.js
+function reports() {
+  if (utils.getEnvName() === 'production') return Promise.resolve();
+  return gulp.src(path.posix.join(conf.paths.src, '/app/reports/projectReports/**/*'), {base: conf.paths.src, encoding: false})
+    .pipe(gulp.dest(conf.paths.dist));
+}
+
 function nodeModules() {
-  return gulp.src(path.join(conf.paths.src, '/node_modules/**/*'), {base: conf.paths.src})
+  return gulp.src(path.posix.join(conf.paths.src, '/node_modules/**/*'), {base: conf.paths.src, encoding: false})
     .pipe($.filter(file => file.stat.isFile()))
     .pipe(gulp.dest(path.join(conf.paths.dist, '/')));
 }
@@ -143,7 +150,7 @@ function finalizeBuild() {
 }
 
 function copyManifest() {
-  jetpack.copy('manifest.json', path.join(conf.paths.dist, '/manifest.json'), {overwrite: true});
+  return jetpack.copyAsync('manifest.json', path.join(conf.paths.dist, '/manifest.json'), {overwrite: true});
 }
 
 // Binary dependency management
@@ -189,23 +196,62 @@ function downloadDeps() {
       var destName = fileName;
     }
 
-    return progress(request({uri: uri, timeout: 5000}))
-      .on('progress', state => {
-        console.log(`Downloading ${depend}, ${(state.percent * 100).toFixed(0)}%`);
-      })
-      .pipe(source(destName))
-      .pipe(gulp.dest(destination));
+    return downloadFile(depend, uri, path.join(destination, destName));
   });
 
-  return merge(tasks);
+  return Promise.all(tasks);
 }
 
-const { pipeline } = require('stream');
-const { promisify } = require('util');
-const pipelineAsync = promisify(pipeline);
+// Fails if no response headers or no data arrives within TIMEOUT_MS
+const TIMEOUT_MS = 5000;
+
+async function downloadFile(depend, uri, destPath) {
+  const controller = new AbortController();
+  let timer;
+  const resetTimer = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => controller.abort(new Error(`Timed out after ${TIMEOUT_MS}ms downloading ${uri}`)), TIMEOUT_MS);
+  };
+
+  try {
+    resetTimer();
+    const response = await fetch(uri, {signal: controller.signal});
+    if (!response.ok) {
+      throw new Error(`Download of ${uri} failed: HTTP ${response.status} ${response.statusText}`);
+    }
+
+    const total = Number(response.headers.get('content-length')) || 0;
+    let received = 0;
+    let lastPercent = -1;
+    const counter = new Transform({
+      transform(chunk, encoding, callback) {
+        resetTimer();
+        received += chunk.length;
+        if (total) {
+          const percent = Math.floor(received / total * 100);
+          if (percent !== lastPercent) {
+            lastPercent = percent;
+            console.log(`Downloading ${depend}, ${percent}%`);
+          }
+        }
+        callback(null, chunk);
+      }
+    });
+
+    fs.mkdirSync(path.dirname(destPath), {recursive: true});
+    await pipeline(Readable.fromWeb(response.body), counter, fs.createWriteStream(destPath), {signal: controller.signal});
+  } catch (err) {
+    fs.rmSync(destPath, {force: true});
+    // fetch() reports network errors as a bare 'fetch failed'; the reason (ENOTFOUND, ECONNREFUSED, ...) is in err.cause
+    if (err.cause) throw new Error(`Download of ${uri} failed: ${err.cause.code || err.cause.message || err.cause}`, {cause: err});
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function extractTarball(file, dir, options) {
-  return pipelineAsync(
+  return pipeline(
     jetpack.createReadStream(file),
     zlib.createGunzip(),
     tar.extract(dir, options)
@@ -297,14 +343,14 @@ function cleanDeps() {
       var destName = fileName;
     }
 
-    return gulp.src(path.join(destination, fileName), {read: false})
+    return gulp.src(path.join(destination, fileName).replace(/\\/g, '/'), {read: false})
       .pipe(gulpClean());
   });
 
   return merge(tasks);
 }
 
-exports.build = gulp.series(gulp.parallel(html, fonts, nodeModules, other, environment), finalizeBuild);
+exports.build = gulp.series(gulp.parallel(html, fonts, nodeModules, other, reports, environment), finalizeBuild);
 exports.clean = clean;
 exports.copyManifest = copyManifest;
 exports.installDeps = gulp.series(downloadDeps, extractDeps, cleanDeps);
