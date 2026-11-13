@@ -34,7 +34,8 @@ export class ReportsPO extends PagePO {
     await expect(this.webview).toBeVisible();
 
     const expectedSrc = `${this.EXPECTED_SRC_FOLDER}${expectedSelectedView}.html`;
-    const wvSrc = (await this.webview.getAttribute('src'))?.slice(-1 * expectedSrc.length);
+    // Once the page has loaded, Electron rewrites src to the encoded URL (Summary%20Table.html)
+    const wvSrc = decodeURI((await this.webview.getAttribute('src')) ?? '').slice(-1 * expectedSrc.length);
     expect(path.normalize(wvSrc)).toBe(path.normalize(expectedSrc));
   }
 }
