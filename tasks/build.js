@@ -106,6 +106,13 @@ function other() {
     .pipe(gulp.dest(path.join(conf.paths.dist, '/')));
 }
 
+// Unpackaged builds load the report pages relative to index.html; packaged apps get them from release_*.js
+function reports() {
+  if (utils.getEnvName() === 'production') return Promise.resolve();
+  return gulp.src(path.posix.join(conf.paths.src, '/app/reports/projectReports/**/*'), {base: conf.paths.src, encoding: false})
+    .pipe(gulp.dest(conf.paths.dist));
+}
+
 function nodeModules() {
   return gulp.src(path.posix.join(conf.paths.src, '/node_modules/**/*'), {base: conf.paths.src, encoding: false})
     .pipe($.filter(file => file.stat.isFile()))
@@ -343,7 +350,7 @@ function cleanDeps() {
   return merge(tasks);
 }
 
-exports.build = gulp.series(gulp.parallel(html, fonts, nodeModules, other, environment), finalizeBuild);
+exports.build = gulp.series(gulp.parallel(html, fonts, nodeModules, other, reports, environment), finalizeBuild);
 exports.clean = clean;
 exports.copyManifest = copyManifest;
 exports.installDeps = gulp.series(downloadDeps, extractDeps, cleanDeps);
