@@ -41,6 +41,9 @@ var packageReports = function () {
 };
 
 var finalize = function () {
+  // Electron's default app; app.asar is what runs
+  readyAppDir.remove('resources/default_app.asar');
+
   // Create .desktop file from the template
   var desktop = projectDir.read('resources/linux/app.desktop');
   desktop = utils.replace(desktop, {
