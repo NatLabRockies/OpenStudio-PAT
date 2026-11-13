@@ -31,11 +31,11 @@
 // window from here.
 
 import { app } from 'electron';
+import path from 'path';
 import createWindow from './electron/window';
+import registerIpc from './electron/ipc';
+import { setApplicationMenu, setContextMenu } from './electron/menu';
 import { getEnv } from './env';
-
-const remoteMain = require('@electron/remote/main');
-remoteMain.initialize();
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
@@ -55,13 +55,55 @@ app.on('ready', () => {
       backgroundThrottling: !isHeadlessTest, // hidden windows otherwise throttle timers/animations
       nodeIntegration: true,
       contextIsolation: false,
+      preload: path.join(__dirname, 'main_preload.js'),
       webviewTag: true,
       webSecurity: false // Disable the same-origin policy when using http
     }
   });
-  remoteMain.enable(mainWindow.webContents);
+
+  // CI smoke test: PAT_SMOKE_TEST=1 exits 0 once the AngularJS app has bootstrapped, 1 on load failure/crash/timeout.
+  // Combine with HEADLESS_TEST=1 to run it locally without a visible window.
+  if (process.env.PAT_SMOKE_TEST === '1') {
+    const fail = reason => {
+      console.error('PAT smoke test FAILED: ' + reason);
+      app.exit(1);
+    };
+    const wc = mainWindow.webContents;
+    // Only main-frame failures count; -3 is ERR_ABORTED (cancelled or redirected navigation)
+    wc.on('did-fail-load', (event, code, description, url, isMainFrame) => {
+      if (isMainFrame && code !== -3) fail('did-fail-load ' + code + ' ' + description);
+    });
+    wc.on('render-process-gone', (event, details) => fail('render-process-gone ' + details.reason));
+    wc.on('did-finish-load', () => {
+      setTimeout(() => {
+        wc.executeJavaScript('typeof angular !== "undefined" && !!angular.element(document.body).injector()')
+          .then(ok => {
+            if (ok) {
+              console.log('PAT smoke test passed');
+              app.exit(0);
+            } else {
+              fail('AngularJS app did not bootstrap');
+            }
+          })
+          .catch(err => fail(err.message));
+      }, 5000);
+    });
+    setTimeout(() => fail('timeout'), 90000);
+  }
 
   const env = getEnv(app.getAppPath());
+  const trusted = registerIpc(mainWindow, env);
+  setApplicationMenu(mainWindow, trusted);
+  setContextMenu(mainWindow, env);
+
+  // The main window only ever shows the app's page, which is what the IPC channels trust: no navigation to another
+  // page (a dropped file, a link) and no child windows. A reload of the page itself is still allowed.
+  const page = url => url.split('#')[0];
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (page(url) !== page(mainWindow.webContents.getURL())) event.preventDefault();
+  });
+  mainWindow.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
+
   if (env.name === 'development') {
     mainWindow.loadURL('http://localhost:3000/index.html');
     mainWindow.openDevTools();

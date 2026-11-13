@@ -1,5 +1,5 @@
 import { ElectronApplication, Page, _electron as electron } from '@playwright/test';
-import { MAIN_SCRIPT_PATH } from './constants';
+import { MAIN_SCRIPT_PATH, MenuStructureItem } from './constants';
 
 // Hidden, dockless window for local runs so tests don't steal focus. CI stays visible:
 // nobody's focus to steal there, and CSS animations stall in hidden windows under xvfb.
@@ -68,8 +68,29 @@ export class App {
   }
 
   static async getMenuItem(menuItem: string) {
-    return App.instance.evaluate(async ({ app }, params) => app.applicationMenu!.getMenuItemById(params.menuItem), {
-      menuItem
+    // Return a plain projection: a raw MenuItem is not reliably serialisable across Electron versions
+    return App.instance.evaluate(
+      ({ app }, params) => {
+        const plain = (i: any): any =>
+          i && { label: i.label, submenu: i.submenu && { items: i.submenu.items.map(plain) } };
+        return plain(app.applicationMenu!.getMenuItemById(params.menuItem));
+      },
+      { menuItem }
+    );
+  }
+
+  static async getMenuStructure(): Promise<{ name: string; items: MenuStructureItem[] }> {
+    return App.instance.evaluate(({ app }) => {
+      const plain = (i: any): any => {
+        const item: any = {};
+        for (const key of ['label', 'id', 'role', 'type', 'accelerator']) {
+          if (i[key]) item[key] = i[key];
+        }
+        if (i.type === 'radio') item.checked = i.checked;
+        if (i.submenu) item.submenu = i.submenu.items.map(plain);
+        return item;
+      };
+      return { name: app.name, items: app.applicationMenu!.items.map(plain) };
     });
   }
 

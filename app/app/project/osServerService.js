@@ -26,7 +26,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************************************************************/
 import jetpack from 'fs-jetpack';
-import { app } from '@electron/remote';
 import path from 'path';
 import os from 'os';
 import AdmZip from 'adm-zip';
@@ -56,7 +55,7 @@ export class OsServer {
     vm.$log.info('Number of cores: ', vm.numCores);
     vm.$log.info('Number of workers set to: ', vm.numWorkers);
 
-    const src = jetpack.cwd(app.getPath('userData'));
+    const src = jetpack.cwd(window.patBridge.paths.userData);
     if (vm.Message.showDebug()) vm.$log.debug('src.path(): ', src.path());
 
     vm.cliPath = DependencyManager.getPath('PAT_OS_CLI_PATH');

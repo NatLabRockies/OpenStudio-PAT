@@ -25,8 +25,6 @@
  *  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************************************************************/
-import { app } from '@electron/remote';
-
 export class ModalOpenProjectController {
 
   constructor($log, $scope, $uibModalInstance, SetProject, Project, Message) {
@@ -36,7 +34,6 @@ export class ModalOpenProjectController {
     vm.$log = $log;
     vm.$scope = $scope;
     vm.$uibModalInstance = $uibModalInstance;
-    vm.app = app;
     vm.setProject = SetProject;
     vm.Project = Project;
     vm.Message = Message;
@@ -66,7 +63,7 @@ export class ModalOpenProjectController {
   cancel() {
     const vm = this;
     if (vm.Message.showDebug()) vm.$log.debug('ModalOpenProjectController::cancel');
-    vm.app.quit();
+    window.patBridge.quit();
     vm.$uibModalInstance.dismiss('cancel');
   }
 }
