@@ -157,9 +157,9 @@ jobs:
       run: |
         set -ex  # tests are separate commands: -e ignores a failure on the left of &&
         case "$RUNNER_OS" in
-          Linux)   test -x tmp/pat_*/opt/pat/pat; test -f tmp/pat_*/opt/pat/resources/app.asar ;;
-          macOS)   test -x tmp/ParametricAnalysisTool.app/Contents/MacOS/ParametricAnalysisTool; test -f tmp/ParametricAnalysisTool.app/Contents/Resources/app.asar ;;
-          Windows) test -f tmp/pat/ParametricAnalysisTool.exe; test -f tmp/pat/resources/app.asar ;;
+          Linux)   test -x tmp/pat_*/opt/pat/pat; test -f tmp/pat_*/opt/pat/resources/app.asar; test -f tmp/pat_*/opt/pat/resources/projectReports/vendor/angular-1.5.8.min.js; test ! -e tmp/pat_*/opt/pat/resources/default_app.asar ;;
+          macOS)   test -x tmp/ParametricAnalysisTool.app/Contents/MacOS/ParametricAnalysisTool; test -f tmp/ParametricAnalysisTool.app/Contents/Resources/app.asar; test -f tmp/ParametricAnalysisTool.app/Contents/Resources/projectReports/vendor/angular-1.5.8.min.js; test ! -e tmp/ParametricAnalysisTool.app/Contents/Resources/default_app.asar; test ! -e tmp/ParametricAnalysisTool.app/Contents/Resources/electron.icns ;;
+          Windows) test -f tmp/pat/ParametricAnalysisTool.exe; test -f tmp/pat/resources/app.asar; test -f tmp/pat/resources/projectReports/vendor/angular-1.5.8.min.js; test ! -e tmp/pat/resources/default_app.asar ;;
         esac
         # app/ must not bring a second Electron into the bundle (@electron/remote's peer did, #340)
         test ! -e build/node_modules/electron

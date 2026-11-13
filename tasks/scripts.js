@@ -16,7 +16,8 @@ var eslint = function (fix) {
   fix = !!fix;
   return gulp.src([
       path.posix.join(conf.paths.src, '**/*.js'),
-      '!' + path.posix.join(conf.paths.src, 'node_modules/**')
+      '!' + path.posix.join(conf.paths.src, 'node_modules/**'),
+      '!' + path.posix.join(conf.paths.src, 'app/reports/projectReports/vendor/**')
     ], {base: '.'})
     .pipe($.eslintNew({fix: fix}))
     .pipe($.eslintNew.format())
