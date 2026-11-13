@@ -1,4 +1,3 @@
-/*eslint angular/log: 0*/
 'use strict';
 
 var Q = require('q');

@@ -2,15 +2,12 @@
 
 const js = require('@eslint/js');
 const globals = require('globals');
-const babelParser = require('@babel/eslint-parser');
-const angular = require('eslint-plugin-angular');
 const lodash = require('eslint-plugin-lodash');
 
 module.exports = [
   js.configs.recommended,
   {
     languageOptions: {
-      parser: babelParser,
       globals: {
         ...globals.browser,
         ...globals.jasmine,
@@ -20,10 +17,12 @@ module.exports = [
         module: true
       }
     },
-    plugins: {angular, lodash},
-    // ESLint 9 warns on unused eslint-disable comments by default; ESLint 6 did not
+    plugins: {lodash},
+    // ESLint 9+ warns on unused eslint-disable comments by default; ESLint 6 did not
     linterOptions: {reportUnusedDisableDirectives: 'off'},
     rules: {
+      // Added to eslint:recommended in ESLint 10; 17 hits in app/, left for a cleanup
+      'no-useless-assignment': 'off',
       // In eslint:recommended of ESLint 6, dropped from it in ESLint 9
       'no-extra-semi': 'error',
       'no-inner-declarations': ['error', 'functions', {blockScopedFunctions: 'disallow'}],
@@ -33,7 +32,7 @@ module.exports = [
       'dot-notation': 'warn',
       'no-multi-spaces': 'warn',
       // Variables
-      'no-unused-vars': ['warn', {caughtErrors: 'none'}], // ESLint 9 default is 'all'
+      'no-unused-vars': ['warn', {caughtErrors: 'none'}], // ESLint 9+ default is 'all'
       // Stylistic Issues
       'array-bracket-spacing': 'warn',
 //    'camelcase': ['warn', {'properties': 'always'}],
@@ -72,12 +71,7 @@ module.exports = [
   },
   {
     files: ['app/app/**'],
-    languageOptions: {globals: {angular: true}},
-    rules: {
-      // Angular plugin
-      'angular/log': 'off', // Comment for production
-      'angular/no-service-method': 'off'
-    }
+    languageOptions: {globals: {angular: true}}
   },
   {
     files: ['tasks/**'],
