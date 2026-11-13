@@ -29,7 +29,7 @@ var copyRuntime = function () {
 };
 
 var cleanupRuntime = function () {
-  return readyAppDir.removeAsync('resources/default_app');
+  return readyAppDir.removeAsync('resources/default_app.asar');
 };
 
 var packageBuiltApp = function () {
