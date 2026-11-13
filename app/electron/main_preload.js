@@ -25,47 +25,33 @@
  *  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************************************************************/
-// Convenient way for opening links in external browser, not in the app.
-// Useful especially if you have a lot of links to deal with.
-//
-// Usage:
-//
-// Every link with class ".js-external-link" will be opened in external browser.
-// <a class="js-external-link" href="http://google.com">google</a>
-//
-// The same behaviour for many links can be achieved by adding
-// this class to any parent tag of an anchor tag.
-// <p class="js-external-link">
-//    <a href="http://google.com">google</a>
-//    <a href="http://bing.com">bing</a>
-// </p>
+// Preload of the main window: the only way the renderer reaches main-process APIs (handlers in ipc.js).
+// contextIsolation is still off, so the bridge is assigned to window directly. Once isolation is on, replace the
+// assignment with contextBridge.exposeInMainWorld('patBridge', bridge), which throws without isolation.
 
-(function () {
-  'use strict';
+import { ipcRenderer } from 'electron';
 
-  const shell = require('electron').shell;
+const info = ipcRenderer.sendSync('pat:app-info');
+const invoke = (item, fn, mockedInTest) => (...args) =>
+  ipcRenderer.invoke(info.test && mockedInTest ? `test-${item}-${fn}` : `pat:${item}:${fn}`, ...args);
 
-  const supportExternalLinks = function (e) {
-    let href;
-    let isExternal = false;
-
-    const checkDomElement = function (element) {
-      if (element.nodeName === 'A') {
-        href = element.getAttribute('href');
-      }
-      if (element.classList.contains('js-external-link')) {
-        isExternal = true;
-      }
-      if (href && isExternal) {
-        shell.openExternal(href);
-        e.preventDefault();
-      } else if (element.parentElement) {
-        checkDomElement(element.parentElement);
-      }
-    };
-
-    checkDomElement(e.target);
-  };
-
-  document.addEventListener('click', supportExternalLinks, false);
-}());
+// No bridge for a page main does not trust (ipc.js answers null)
+if (info) window.patBridge = {
+  appPath: info.appPath,
+  paths: info.paths,
+  quit: () => ipcRenderer.send('pat:quit'),
+  exitClicked: () => ipcRenderer.sendSync('pat:exit-clicked') === true,
+  dialog: {
+    showOpenDialog: invoke('dialog', 'showOpenDialog', true),
+    showMessageBox: invoke('dialog', 'showMessageBox', true)
+  },
+  shell: {
+    openExternal: invoke('shell', 'openExternal', true),
+    openPath: invoke('shell', 'openPath')
+  },
+  // handler(id) is called with the id of a clicked application menu item (menu.js)
+  onMenuClick: handler => {
+    ipcRenderer.on('pat:menu', (event, id) => handler(id));
+  },
+  setMenuLanguage: language => ipcRenderer.send('pat:menu:language', language)
+};

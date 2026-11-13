@@ -21,7 +21,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>{{version}}</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.8.0</string>
+	<string>13.0</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

@@ -36,18 +36,18 @@ jobs:
         include:
         - name: Ubuntu
           os: ubuntu-24.04
-          node-version: 18
+          node-version: 24
           allow_failure: false
         - name: macOS
           os: macos-15-intel
-          node-version: 18
+          node-version: 24
           allow_failure: false
-          MACOSX_DEPLOYMENT_TARGET: "12.1"
+          MACOSX_DEPLOYMENT_TARGET: "13.0"
           SDKROOT: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
           DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
         - name: Windows_2022
           os: windows-2022
-          node-version: 18
+          node-version: 24
           allow_failure: false
 
 
@@ -141,11 +141,33 @@ jobs:
       shell: bash
       run: |
         set -x
-        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=11 \
+        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
               -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
               -DCMAKE_BUILD_TYPE=Release \
               ../
         cmake --build . --target "$BUILD_TARGET" -j $N
+
+    # The release tasks swallow errors (.catch(console.error)), so first assert the packaged app exists,
+    # then start the gulp build output (./build) in the repo's Electron. Does not launch the packaged app.
+    - name: Electron startup smoke test
+      timeout-minutes: 3
+      shell: bash
+      env:
+        PAT_SMOKE_TEST: "1"
+      run: |
+        set -ex  # tests are separate commands: -e ignores a failure on the left of &&
+        case "$RUNNER_OS" in
+          Linux)   test -x tmp/pat_*/opt/pat/pat; test -f tmp/pat_*/opt/pat/resources/app.asar; test ! -e tmp/pat_*/opt/pat/resources/default_app.asar ;;
+          macOS)   test -x tmp/ParametricAnalysisTool.app/Contents/MacOS/ParametricAnalysisTool; test -f tmp/ParametricAnalysisTool.app/Contents/Resources/app.asar; test ! -e tmp/ParametricAnalysisTool.app/Contents/Resources/default_app.asar; test ! -e tmp/ParametricAnalysisTool.app/Contents/Resources/electron.icns ;;
+          Windows) test -f tmp/pat/ParametricAnalysisTool.exe; test -f tmp/pat/resources/app.asar; test ! -e tmp/pat/resources/default_app.asar ;;
+        esac
+        # app/ must not bring a second Electron into the bundle (@electron/remote's peer did, #340)
+        test ! -e build/node_modules/electron
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          xvfb-run --auto-servernum npx electron --no-sandbox build
+        else
+          npx electron build
+        fi
 
     - name: Save artifact
       if: github.event_name != 'pull_request'

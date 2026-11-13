@@ -15,8 +15,8 @@ const { babel } = require('@rollup/plugin-babel');
 var eslint = function (fix) {
   fix = !!fix;
   return gulp.src([
-      path.join(conf.paths.src, '**/*.js'),
-      '!' + path.join(conf.paths.src, 'node_modules/**')
+      path.posix.join(conf.paths.src, '**/*.js'),
+      '!' + path.posix.join(conf.paths.src, 'node_modules/**')
     ], {base: '.'})
     .pipe($.eslint({fix: fix}))
     .pipe($.eslint.format())
@@ -38,7 +38,7 @@ var bundle = function (src, dest) {
 
   return rollup.rollup({
     input: src,
-    external: ['adm-zip', 'electron', '@electron/remote', 'fs', 'fs-jetpack', 'http', 'https', 'jszip', 'os', 'path', 'remote', 'url', 'xml2js', 'archiver', 'portfinder', 'version_compare', 'yamljs'],
+    external: ['adm-zip', 'electron', 'fs', 'fs-jetpack', 'http', 'https', 'jszip', 'os', 'path', 'url', 'xml2js', 'archiver', 'portfinder', 'version_compare', 'yamljs'],
     plugins: [
       babel({
         babelHelpers: 'bundled',
@@ -71,6 +71,7 @@ var bundle = function (src, dest) {
 var compileScripts = function () {
   var promises = [
     bundle(path.join(conf.paths.src, '/background.js'), path.join(conf.paths.tmp, 'serve/app/background.js')),
+    bundle(path.join(conf.paths.src, '/electron/main_preload.js'), path.join(conf.paths.tmp, 'serve/app/main_preload.js')),
     bundle(path.join(conf.paths.src, '/app/index.module.js'), path.join(conf.paths.tmp, 'serve/app/index.module.js'))
   ];
 
