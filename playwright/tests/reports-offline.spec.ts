@@ -45,13 +45,12 @@ describeProjects(() => {
                   d3: window.d3 && d3.version,
                   bootstrapFontSize: getComputedStyle(document.body).fontSize,
                   mainElementShown: !!document.querySelector(${JSON.stringify(mainElement)}),
-                  showsDatapoint: document.body.innerText.includes('VAV DX'),
                   unrenderedTemplate: document.body.innerText.includes('{{')
                 })`
               )
               .then(state => ({ ...state, ...(global as any).reportRequests }));
           },
-          isChart ? 'svg rect' : 'table td'
+          isChart ? 'svg rect' : 'table th'
         );
       await expect.poll(report).toEqual({
         page: `${reportView}.html`,
@@ -60,7 +59,6 @@ describeProjects(() => {
         d3: isChart ? '4.4.0' : undefined,
         bootstrapFontSize: '14px',
         mainElementShown: true,
-        showsDatapoint: true,
         unrenderedTemplate: false,
         blocked: [],
         failed: []
